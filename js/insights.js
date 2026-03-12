@@ -11,12 +11,12 @@ function renderInsights(escalations) {
       <div class="insights-sidebar">
         <div class="section-title">Organisations</div>
         <div class="org-list">
-          <div class="org-item ${_selectedOrg === null ? 'active' : ''}" onclick="selectOrg(null)">
+          <div class="org-item ${_selectedOrg === null ? 'active' : ''}" onclick="selectInsightsOrg(null)">
             <span class="org-name">All Organisations</span>
             <span class="org-count">${escalations.length}</span>
           </div>
           ${orgs.map(o => `
-            <div class="org-item ${_selectedOrg === o.name ? 'active' : ''}" onclick="selectOrg('${o.name.replace(/'/g, "\\'")}')">
+            <div class="org-item ${_selectedOrg === o.name ? 'active' : ''}" onclick="selectInsightsOrg('${o.name.replace(/'/g, "\\'")}')">
               <span class="org-name">${o.name}</span>
               <span class="org-count">${o.total}</span>
             </div>
@@ -30,7 +30,7 @@ function renderInsights(escalations) {
   `;
 }
 
-function selectOrg(org) {
+function selectInsightsOrg(org) {
   _selectedOrg = org;
   const escalations = window._escalations;
   const orgs = getOrgStats(escalations);
@@ -131,7 +131,7 @@ function renderInsightDetail(escalations, orgs, types, selectedOrg) {
         </tr></thead>
         <tbody>
           ${orgs.map(o => `
-            <tr class="clickable-row" onclick="selectOrg('${o.name.replace(/'/g, "\\'")}')">
+            <tr class="clickable-row" onclick="selectInsightsOrg('${o.name.replace(/'/g, "\\'")}')">
               <td><span style="color:var(--blue);cursor:pointer">${o.name}</span></td>
               <td>${o.total}</td>
               <td style="color:var(--green)">${o.resolved}</td>

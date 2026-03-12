@@ -329,6 +329,11 @@ function renderEscalationDetail(esc) {
         </select>
         <input id="esc-days" placeholder="Days to resolve" type="number" class="input-field" />
         <textarea id="esc-notes" placeholder="Notes" class="input-field" rows="3"></textarea>
+        <div class="autocomplete-wrap">
+          <input id="esc-related-display" placeholder="Related escalation (optional)" class="input-field" autocomplete="off" onfocus="showRelatedSuggestions()" oninput="filterRelatedSuggestions()" />
+          <input id="esc-related-id" type="hidden" value="" />
+          <div id="related-suggestions" class="autocomplete-list hidden"></div>
+        </div>
         <div class="modal-actions">
           <button class="btn-secondary" onclick="closeEscModal()">Cancel</button>
           <button class="btn-primary" onclick="saveEscalation()">Save</button>

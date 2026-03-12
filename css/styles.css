@@ -718,3 +718,21 @@ input[type="date"].input-field::-webkit-calendar-picker-indicator { filter: inve
 .help-table th { background: var(--surface2); color: var(--muted); font-weight: 600; text-align: left; padding: 7px 10px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; }
 .help-table td { padding: 8px 10px; border-bottom: 1px solid var(--border)55; color: var(--text); vertical-align: top; }
 .help-table tr:last-child td { border-bottom: none; }
+
+/* Back button */
+.detail-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 18px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--blue);
+  cursor: pointer;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 14px;
+  transition: border-color 0.15s, background 0.15s;
+}
+.detail-back:hover { border-color: var(--blue); background: var(--blue)11; }

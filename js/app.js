@@ -41,6 +41,10 @@ function renderTab(tab) {
   }
 }
 
+function switchTab(tab) {
+  renderTab(tab);
+}
+
 function showToast(msg, type = 'info') {
   const toast = document.getElementById('toast');
   toast.textContent = msg;

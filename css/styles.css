@@ -503,3 +503,105 @@ input[type="date"].input-field::-webkit-calendar-picker-indicator { filter: inve
   font-size: 0.8rem; color: var(--blue); text-decoration: none;
 }
 .timeline-link:hover { text-decoration: underline; }
+
+/* ── Silent App ───────────────────────────────────────────────── */
+.sa-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px; }
+.sa-stats { display:flex; gap:16px; }
+.sa-stat { display:flex; flex-direction:column; align-items:center; background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:10px 18px; min-width:70px; }
+.sa-stat.amber .sa-stat-num { color:var(--amber); }
+.sa-stat.red   .sa-stat-num { color:var(--red); }
+.sa-stat-num   { font-size:1.5rem; font-weight:700; color:var(--blue); line-height:1; }
+.sa-stat-label { font-size:0.7rem; color:var(--muted); margin-top:4px; text-transform:uppercase; letter-spacing:0.05em; }
+.sa-toolbar    { display:flex; align-items:center; gap:10px; }
+
+/* View toggle */
+.view-toggle { display:flex; border:1px solid var(--border); border-radius:6px; overflow:hidden; }
+.view-btn { background:transparent; border:none; color:var(--muted); padding:6px 14px; font-size:12px; cursor:pointer; transition:all 0.15s; }
+.view-btn.active { background:var(--blue); color:#fff; }
+
+/* Kanban */
+.kanban-board { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; align-items:start; }
+.kanban-col { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px; min-height:200px; }
+.kanban-col-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+.kanban-col-title  { font-weight:600; font-size:13px; color:var(--text); }
+.kanban-col-count  { background:var(--border); color:var(--muted); border-radius:10px; padding:1px 8px; font-size:11px; }
+.kanban-cards      { display:flex; flex-direction:column; gap:10px; }
+.kanban-empty      { color:var(--muted); font-size:12px; font-style:italic; text-align:center; padding:20px 0; }
+.kanban-card { background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:12px; cursor:pointer; transition:border-color 0.15s, transform 0.1s; }
+.kanban-card:hover { border-color:var(--blue)88; transform:translateY(-1px); }
+.kanban-card-top  { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px; }
+.kanban-card-org  { font-weight:600; font-size:13px; }
+.kanban-card-meta { font-size:11px; color:var(--muted); margin-bottom:3px; }
+.rag-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; margin-top:2px; }
+
+/* Progress bar */
+.checklist-progress { display:flex; align-items:center; gap:8px; margin-top:10px; }
+.progress-bar-track { flex:1; height:5px; background:var(--border); border-radius:3px; overflow:hidden; }
+.progress-bar-fill  { height:100%; border-radius:3px; transition:width 0.3s; }
+.progress-label { font-size:10px; color:var(--muted); white-space:nowrap; }
+
+/* Detail layout */
+.detail-wrap { display:grid; grid-template-columns:1fr 340px; gap:18px; align-items:start; }
+.detail-main { display:flex; flex-direction:column; gap:14px; }
+.detail-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:18px; }
+.detail-card-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px; }
+.detail-org   { font-size:1.2rem; font-weight:700; margin-bottom:4px; }
+.detail-notes { margin-top:14px; font-size:12px; color:var(--muted); font-style:italic; border-top:1px solid var(--border); padding-top:12px; }
+.rag-badge-lg { padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; }
+.csat-badge   { background:var(--teal)22; color:var(--teal); border:1px solid var(--teal)44; border-radius:20px; padding:3px 10px; font-size:12px; font-weight:600; }
+.btn-sm { padding:5px 12px; font-size:12px; }
+
+/* Stage pipeline */
+.stage-pipeline { display:flex; align-items:center; gap:0; margin:16px 0 0; }
+.pipeline-step  { display:flex; flex-direction:column; align-items:center; flex:1; }
+.pipeline-dot   { width:12px; height:12px; border-radius:50%; background:var(--border); border:2px solid var(--border); transition:all 0.2s; }
+.pipeline-step.done   .pipeline-dot { background:var(--blue); border-color:var(--blue); }
+.pipeline-step.active .pipeline-dot { background:var(--green); border-color:var(--green); box-shadow:0 0 0 3px var(--green)33; }
+.pipeline-label { font-size:10px; color:var(--muted); margin-top:5px; text-align:center; }
+.pipeline-step.done   .pipeline-label { color:var(--blue); }
+.pipeline-step.active .pipeline-label { color:var(--green); font-weight:600; }
+.pipeline-date  { font-size:9px; color:var(--muted); margin-top:2px; }
+.pipeline-line  { flex:1; height:2px; background:var(--border); margin-bottom:20px; }
+.pipeline-line.done { background:var(--blue); }
+
+/* Checklists */
+.checklist-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px; }
+.checklist-card.checklist-active { border-color:var(--blue)66; }
+.checklist-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+.checklist-stage-title { font-weight:600; font-size:13px; }
+.checklist-count { font-size:11px; color:var(--muted); background:var(--border); border-radius:10px; padding:1px 8px; }
+.checklist-count.complete { background:var(--green)22; color:var(--green); }
+.checklist-items { display:flex; flex-direction:column; gap:8px; }
+.checklist-item { display:flex; align-items:flex-start; gap:8px; cursor:pointer; font-size:12px; color:var(--text); }
+.checklist-item input[type=checkbox] { margin-top:2px; flex-shrink:0; accent-color:var(--blue); }
+.checked-text { text-decoration:line-through; color:var(--muted); }
+.checklist-empty { font-size:12px; color:var(--muted); font-style:italic; padding:6px 0; }
+
+/* Linked escalations */
+.linked-esc { font-size:12px; padding:8px 0; border-bottom:1px solid var(--border)55; cursor:pointer; color:var(--text); transition:color 0.15s; }
+.linked-esc:hover { color:var(--blue); }
+.linked-esc:last-child { border-bottom:none; }
+
+/* Activity sidebar */
+.detail-sidebar { position:sticky; top:20px; }
+.activity-card  { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px; }
+.activity-header { font-weight:600; font-size:13px; margin-bottom:14px; }
+.activity-form  { display:flex; flex-direction:column; gap:8px; margin-bottom:16px; border-bottom:1px solid var(--border); padding-bottom:16px; }
+.input-sm { font-size:12px; padding:6px 10px; }
+.activity-timeline { display:flex; flex-direction:column; gap:10px; }
+.activity-entry { background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:10px; }
+.activity-entry-top { display:flex; align-items:center; gap:8px; margin-bottom:6px; flex-wrap:wrap; }
+.activity-stage-tag { font-size:10px; background:var(--blue)22; color:var(--blue); border-radius:4px; padding:1px 6px; font-weight:600; }
+.timeline-date { font-size:10px; color:var(--muted); margin-left:auto; }
+.activity-note  { font-size:12px; color:var(--text); line-height:1.5; }
+.activity-links { display:flex; gap:10px; margin-top:6px; flex-wrap:wrap; }
+.activity-link  { font-size:11px; color:var(--blue); text-decoration:none; }
+.activity-link:hover { text-decoration:underline; }
+
+/* Modal grid */
+.modal-wide { max-width:680px !important; }
+.modal-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
+.field-label { font-size:11px; color:var(--muted); margin-bottom:6px; display:block; }
+.os-checkboxes { display:flex; gap:16px; }
+.os-check { display:flex; align-items:center; gap:6px; font-size:13px; cursor:pointer; color:var(--text); }
+.os-check input { accent-color:var(--blue); }

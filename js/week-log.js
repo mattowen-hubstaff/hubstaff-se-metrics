@@ -107,16 +107,28 @@ async function saveWeekLog() {
     if (val === "") return fallback; const num = parseFloat(val); return Math.min(5, Math.max(0.1, num));
   };
 
+  const tEsc      = parseNum('wl-t-esc',      existing.time_escalations ?? 0);
+  const tCalls    = parseNum('wl-t-calls',    existing.time_calls ?? 0);
+  const tDocs     = parseNum('wl-t-docs',     existing.time_docs ?? 0);
+  const tAsync    = parseNum('wl-t-async',    existing.time_async ?? 0);
+  const tProjects = parseNum('wl-t-projects', existing.time_projects ?? 0);
+  const tTotal    = tEsc + tCalls + tDocs + tAsync + tProjects;
+
+  if (tTotal > 100) {
+    showToast(`Time distribution adds up to ${tTotal}% — must be 100% or less`, 'error');
+    return;
+  }
+
   const data = {
     escalations:      parseNum('wl-escalations', existing.escalations ?? 0),
     calls:            parseNum('wl-calls',        existing.calls ?? 0),
     docs_completed:   parseNum('wl-docs',         existing.docs_completed ?? 0),
     csat_score:       parseFloat2('wl-csat',      existing.csat_score ?? null),
-    time_escalations: parseNum('wl-t-esc',        existing.time_escalations ?? 0),
-    time_calls:       parseNum('wl-t-calls',      existing.time_calls ?? 0),
-    time_docs:        parseNum('wl-t-docs',       existing.time_docs ?? 0),
-    time_async:       parseNum('wl-t-async',      existing.time_async ?? 0),
-    time_projects:    parseNum('wl-t-projects',   existing.time_projects ?? 0),
+    time_escalations: tEsc,
+    time_calls:       tCalls,
+    time_docs:        tDocs,
+    time_async:       tAsync,
+    time_projects:    tProjects,
   };
   showToast('Saving…', 'info');
   try {

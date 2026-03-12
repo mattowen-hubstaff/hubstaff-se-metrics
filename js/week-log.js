@@ -1,0 +1,102 @@
+// Week log tab — enter weekly numbers
+
+function renderWeekLog(weeklyMetrics) {
+  document.getElementById('week-log-content').innerHTML = `
+    <div class="week-log-form">
+      <div class="section-title">Log This Week's Numbers</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Week</label>
+          <select id="wl-week" class="input-field">
+            ${weeklyMetrics.map(w => `<option value="${w.id}" data-idx="${w.week_index}">${w.week}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Escalations Handled</label>
+          <input id="wl-escalations" type="number" class="input-field" placeholder="0" />
+        </div>
+        <div class="form-group">
+          <label>Calls Joined</label>
+          <input id="wl-calls" type="number" class="input-field" placeholder="0" />
+        </div>
+        <div class="form-group">
+          <label>Docs Completed</label>
+          <input id="wl-docs" type="number" class="input-field" placeholder="0" />
+        </div>
+        <div class="form-group">
+          <label>CSAT Score (out of 5)</label>
+          <input id="wl-csat" type="number" step="0.1" min="0" max="5" class="input-field" placeholder="e.g. 4.5" />
+        </div>
+      </div>
+      <div class="section-title" style="margin-top:20px">Time Distribution — Actuals (%)</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Escalations & Investigations <span class="target-hint">(target ${TIME_TARGETS.escalations}%)</span></label>
+          <input id="wl-t-esc" type="number" class="input-field" placeholder="${TIME_TARGETS.escalations}" />
+        </div>
+        <div class="form-group">
+          <label>Calls <span class="target-hint">(target ${TIME_TARGETS.calls}%)</span></label>
+          <input id="wl-t-calls" type="number" class="input-field" placeholder="${TIME_TARGETS.calls}" />
+        </div>
+        <div class="form-group">
+          <label>Documentation <span class="target-hint">(target ${TIME_TARGETS.docs}%)</span></label>
+          <input id="wl-t-docs" type="number" class="input-field" placeholder="${TIME_TARGETS.docs}" />
+        </div>
+        <div class="form-group">
+          <label>Cross-team Async <span class="target-hint">(target ${TIME_TARGETS.async}%)</span></label>
+          <input id="wl-t-async" type="number" class="input-field" placeholder="${TIME_TARGETS.async}" />
+        </div>
+        <div class="form-group">
+          <label>Special Projects <span class="target-hint">(target ${TIME_TARGETS.projects}%)</span></label>
+          <input id="wl-t-projects" type="number" class="input-field" placeholder="${TIME_TARGETS.projects}" />
+        </div>
+      </div>
+      <button class="btn-primary" style="margin-top:20px" onclick="saveWeekLog()">Save Week</button>
+    </div>
+    <div class="section-title" style="margin-top:32px">All Weekly Data</div>
+    <table class="data-table">
+      <thead><tr>
+        <th>Week</th><th>Escalations</th><th>Calls</th><th>Docs</th><th>CSAT</th>
+        <th>Esc %</th><th>Calls %</th><th>Docs %</th><th>Async %</th><th>Projects %</th>
+      </tr></thead>
+      <tbody>
+        ${weeklyMetrics.map(w => `
+          <tr>
+            <td>${w.week}</td>
+            <td>${w.escalations ?? 0}</td>
+            <td>${w.calls ?? 0}</td>
+            <td>${w.docs_completed ?? 0}</td>
+            <td>${w.csat_score ?? '—'}</td>
+            <td>${w.time_escalations ?? 0}%</td>
+            <td>${w.time_calls ?? 0}%</td>
+            <td>${w.time_docs ?? 0}%</td>
+            <td>${w.time_async ?? 0}%</td>
+            <td>${w.time_projects ?? 0}%</td>
+          </tr>`).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+async function saveWeekLog() {
+  const id = document.getElementById('wl-week').value;
+  const data = {
+    escalations: parseInt(document.getElementById('wl-escalations').value) || 0,
+    calls: parseInt(document.getElementById('wl-calls').value) || 0,
+    docs_completed: parseInt(document.getElementById('wl-docs').value) || 0,
+    csat_score: parseFloat(document.getElementById('wl-csat').value) || null,
+    time_escalations: parseInt(document.getElementById('wl-t-esc').value) || 0,
+    time_calls: parseInt(document.getElementById('wl-t-calls').value) || 0,
+    time_docs: parseInt(document.getElementById('wl-t-docs').value) || 0,
+    time_async: parseInt(document.getElementById('wl-t-async').value) || 0,
+    time_projects: parseInt(document.getElementById('wl-t-projects').value) || 0,
+  };
+  showToast('Saving…', 'info');
+  try {
+    await updateWeeklyMetric(id, data);
+    await reloadAll();
+    showToast('Week saved!', 'success');
+  } catch (e) {
+    showToast('Save failed', 'error');
+  }
+}

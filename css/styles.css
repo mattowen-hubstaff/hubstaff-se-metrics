@@ -380,6 +380,55 @@ textarea.input-field { resize: vertical; }
 .modal-box h3 { font-family: var(--font-mono); font-size: 14px; color: var(--blue); }
 .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; }
 
+/* Insights */
+.insights-layout { display: grid; grid-template-columns: 220px 1fr; gap: 20px; align-items: start; }
+.insights-sidebar {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  position: sticky;
+  top: 20px;
+}
+.org-list { display: flex; flex-direction: column; gap: 4px; margin-top: 10px; }
+.org-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text);
+  transition: background 0.15s;
+}
+.org-item:hover { background: var(--surface2); }
+.org-item.active { background: var(--blue)22; color: var(--blue); }
+.org-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.org-count {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  background: var(--surface2);
+  padding: 2px 6px;
+  border-radius: 10px;
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+.org-item.active .org-count { background: var(--blue)33; color: var(--blue); }
+
+.insight-header { margin-bottom: 20px; }
+.insight-title { font-size: 18px; font-weight: 600; color: var(--text); }
+.insight-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.insight-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+
+.type-bars { display: flex; flex-direction: column; gap: 10px; }
+.type-bar-row { display: flex; align-items: center; gap: 12px; }
+.type-bar-label { width: 140px; font-size: 12px; color: var(--text); flex-shrink: 0; }
+.type-bar-track { flex: 1; height: 8px; background: var(--surface2); border-radius: 4px; }
+.type-bar-fill { height: 100%; background: var(--blue); border-radius: 4px; transition: width 0.4s ease; }
+.type-bar-count { font-family: var(--font-mono); font-size: 12px; color: var(--muted); width: 30px; text-align: right; }
+.clickable-row:hover td { background: var(--surface2); cursor: pointer; }
+
 /* Empty state */
 .empty-state { text-align: center; color: var(--muted); padding: 48px; font-size: 13px; }
 

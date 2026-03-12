@@ -253,7 +253,8 @@ body {
 }
 
 /* Chart grid needs relative positioning for tooltip */
-.chart-grid { position: relative; }
+.chart-grid { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+canvas { width: 100% !important; display: block; }
 .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .chart-card {
   background: var(--surface);

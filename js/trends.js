@@ -37,19 +37,19 @@ function renderTrends(weeklyMetrics) {
     <div class="chart-grid">
       <div class="chart-card">
         <div class="chart-title">${CHART_CONTEXT.escalations.title}</div>
-        <canvas id="chart-esc" height="140"></canvas>
+        <canvas id="chart-esc" height="220"></canvas>
       </div>
       <div class="chart-card">
         <div class="chart-title">${CHART_CONTEXT.calls.title}</div>
-        <canvas id="chart-calls" height="140"></canvas>
+        <canvas id="chart-calls" height="220"></canvas>
       </div>
       <div class="chart-card">
         <div class="chart-title">${CHART_CONTEXT.csat.title}</div>
-        <canvas id="chart-csat" height="140"></canvas>
+        <canvas id="chart-csat" height="220"></canvas>
       </div>
       <div class="chart-card">
         <div class="chart-title">${CHART_CONTEXT.docs.title}</div>
-        <canvas id="chart-docs" height="140"></canvas>
+        <canvas id="chart-docs" height="220"></canvas>
       </div>
     </div>
   `;

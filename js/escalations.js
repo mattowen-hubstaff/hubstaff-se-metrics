@@ -153,7 +153,7 @@ function filterRelatedSuggestions() {
     : pool
   ).slice(0, 8);
 
-  if (matches.length === 0 && !useOrgFilter) { list.classList.add('hidden'); return; }
+  if (matches.length === 0 || (!useOrgFilter && !val)) { list.classList.add('hidden'); return; }
 
   const showAllLink = useOrgFilter
     ? `<div class="autocomplete-item search-all-link" onmousedown="(function(e){e.preventDefault();_relatedSearchAll=true;var inp=document.getElementById('esc-related-display');inp.value='';inp.placeholder='Type to search all organisations…';document.getElementById('related-suggestions').classList.add('hidden');setTimeout(()=>{inp.focus();},50);})(event)">🔍 Search all organisations…</div>`

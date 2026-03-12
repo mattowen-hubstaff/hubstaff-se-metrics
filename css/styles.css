@@ -605,3 +605,9 @@ input[type="date"].input-field::-webkit-calendar-picker-indicator { filter: inve
 .os-checkboxes { display:flex; gap:16px; }
 .os-check { display:flex; align-items:center; gap:6px; font-size:13px; cursor:pointer; color:var(--text); }
 .os-check input { accent-color:var(--blue); }
+
+/* Kanban drag and drop */
+.kanban-card.dragging { opacity: 0.4; transform: rotate(2deg) scale(0.98); cursor: grabbing; }
+.kanban-card[draggable="true"] { cursor: grab; }
+.kanban-col.drag-over { border-color: var(--blue); background: var(--blue)0d; }
+.kanban-col.drag-over .kanban-drop-hint { color: var(--blue); }

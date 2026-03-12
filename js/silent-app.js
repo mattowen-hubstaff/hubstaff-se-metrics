@@ -130,14 +130,15 @@ function renderKanban(byStage) {
   return '<div class="kanban-board">' +
     STAGES.map(function(stage) {
       var cards = byStage[stage] || [];
-      return '<div class="kanban-col">' +
+      return '<div class="kanban-col" data-stage="' + stage + '"' +
+        ' ondragover="kanbanDragOver(event)" ondrop="kanbanDrop(event,\'' + stage + '\')" ondragleave="kanbanDragLeave(event)">' +
         '<div class="kanban-col-header">' +
           '<span class="kanban-col-title">' + stage + '</span>' +
           '<span class="kanban-col-count">' + cards.length + '</span>' +
         '</div>' +
         '<div class="kanban-cards">' +
           (cards.length === 0
-            ? '<div class="kanban-empty">None</div>'
+            ? '<div class="kanban-empty kanban-drop-hint">None</div>'
             : cards.map(renderKanbanCard).join('')) +
         '</div>' +
       '</div>';
@@ -155,7 +156,9 @@ function renderKanbanCard(impl) {
   var os         = Array.isArray(impl.os) ? impl.os.join(', ') : (impl.os || '');
   var fillColour = pct === 100 ? 'var(--green)' : 'var(--blue)';
 
-  return '<div class="kanban-card" onclick="openImplDetail(\'' + impl.id + '\')">' +
+  return '<div class="kanban-card" draggable="true"' +
+    ' ondragstart="kanbanDragStart(event,\'' + impl.id + '\')" ondragend="kanbanDragEnd(event)"' +
+    ' onclick="openImplDetail(\'' + impl.id + '\')">' +
     '<div class="kanban-card-top">' +
       '<div class="kanban-card-org">' + impl.org + '</div>' +
       '<div class="rag-dot" style="background:' + ragColour + '" title="' + impl.rag + '"></div>' +
@@ -169,6 +172,58 @@ function renderKanbanCard(impl) {
       '<span class="progress-label">' + completed + '/' + total + '</span>' +
     '</div>' +
   '</div>';
+}
+
+
+// ── Drag and drop ─────────────────────────────────────────────────────────────
+
+var _draggingId = null;
+
+function kanbanDragStart(event, id) {
+  _draggingId = id;
+  event.dataTransfer.effectAllowed = 'move';
+  setTimeout(function() { event.target.classList.add('dragging'); }, 0);
+}
+
+function kanbanDragEnd(event) {
+  event.target.classList.remove('dragging');
+  document.querySelectorAll('.kanban-col').forEach(function(col) { col.classList.remove('drag-over'); });
+}
+
+function kanbanDragOver(event) {
+  event.preventDefault();
+  event.dataTransfer.dropEffect = 'move';
+  document.querySelectorAll('.kanban-col').forEach(function(c) { c.classList.remove('drag-over'); });
+  event.currentTarget.classList.add('drag-over');
+}
+
+function kanbanDragLeave(event) {
+  if (!event.currentTarget.contains(event.relatedTarget)) {
+    event.currentTarget.classList.remove('drag-over');
+  }
+}
+
+async function kanbanDrop(event, newStage) {
+  event.preventDefault();
+  event.currentTarget.classList.remove('drag-over');
+  if (!_draggingId) return;
+  var impl = window._implementations.find(function(i) { return i.id === _draggingId; });
+  _draggingId = null;
+  if (!impl || impl.stage === newStage) return;
+  var stageEnteredAt = Object.assign({}, impl.stage_entered_at || {});
+  stageEnteredAt[newStage] = new Date().toISOString().slice(0,10);
+  var activity = (Array.isArray(impl.activity) ? impl.activity : []).concat([{
+    stage: newStage,
+    date: new Date().toISOString().slice(0,10),
+    note: 'Moved from ' + impl.stage + ' to ' + newStage
+  }]);
+  try {
+    await updateImplementation(impl.id, { stage: newStage, stage_entered_at: stageEnteredAt, activity: activity });
+    await reloadAll();
+    showToast(impl.org + ' moved to ' + newStage, 'success');
+  } catch(e) {
+    showToast('Move failed', 'error');
+  }
 }
 
 // ── Table ─────────────────────────────────────────────────────────────────────

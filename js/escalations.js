@@ -54,7 +54,7 @@ function renderEscalations(escalations) {
           <input id="esc-org" placeholder="Organisation" class="input-field" autocomplete="off" oninput="filterOrgSuggestions()" onkeydown="orgKeydown(event)" />
           <div id="org-suggestions" class="autocomplete-list hidden"></div>
         </div>
-        <input id="esc-date" placeholder="Date (e.g. 2026-03-16)" class="input-field" />
+        <input id="esc-date" type="date" class="input-field" />
         <select id="esc-type" class="input-field" onchange="toggleOtherField()">
           ${ESCALATION_TYPES.map(t => `<option>${t}</option>`).join('')}
         </select>
@@ -310,7 +310,7 @@ function renderEscalationDetail(esc) {
       <select id="tl-status" class="input-field">
         ${ESCALATION_OUTCOMES.map(o => `<option>${o}</option>`).join('')}
       </select>
-      <input id="tl-date" placeholder="Date (e.g. ${new Date().toISOString().slice(0,10)})" class="input-field" value="${new Date().toISOString().slice(0,10)}" />
+      <input id="tl-date" type="date" class="input-field" value="${new Date().toISOString().slice(0,10)}" />
       <textarea id="tl-note" placeholder="What happened? What did we learn?" class="input-field" rows="3"></textarea>
       <input id="tl-slack" placeholder="Slack URL (optional)" class="input-field" />
       <input id="tl-hubspot" placeholder="HubSpot URL (optional)" class="input-field" />
@@ -324,7 +324,7 @@ function renderEscalationDetail(esc) {
           <input id="esc-org" placeholder="Organisation" class="input-field" autocomplete="off" oninput="filterOrgSuggestions()" onkeydown="orgKeydown(event)" />
           <div id="org-suggestions" class="autocomplete-list hidden"></div>
         </div>
-        <input id="esc-date" placeholder="Date (e.g. 2026-03-16)" class="input-field" />
+        <input id="esc-date" type="date" class="input-field" />
         <select id="esc-type" class="input-field" onchange="toggleOtherField()">
           ${ESCALATION_TYPES.map(t => `<option>${t}</option>`).join('')}
         </select>

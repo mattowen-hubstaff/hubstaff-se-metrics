@@ -290,6 +290,8 @@ canvas { width: 100% !important; }
 }
 .input-field:focus { border-color: var(--blue); }
 textarea.input-field { resize: vertical; }
+input[type="date"].input-field { color-scheme: dark; cursor: pointer; }
+input[type="date"].input-field::-webkit-calendar-picker-indicator { filter: invert(0.6); cursor: pointer; }
 
 /* Buttons */
 .btn-primary {

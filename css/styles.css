@@ -611,3 +611,110 @@ input[type="date"].input-field::-webkit-calendar-picker-indicator { filter: inve
 .kanban-card[draggable="true"] { cursor: grab; }
 .kanban-col.drag-over { border-color: var(--blue); background: var(--blue)0d; }
 .kanban-col.drag-over .kanban-drop-hint { color: var(--blue); }
+
+/* ── Footer ───────────────────────────────────────────────────── */
+.app-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 24px;
+  margin-top: 40px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--muted);
+}
+.footer-sep { opacity: 0.4; }
+.footer-help-btn {
+  background: none;
+  border: none;
+  color: var(--blue);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 0;
+  font-family: var(--font-sans);
+  text-decoration: underline;
+}
+.footer-help-btn:hover { opacity: 0.8; }
+
+/* ── Help Modal ───────────────────────────────────────────────── */
+.help-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.help-overlay.hidden { display: none; }
+.help-modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  width: 100%;
+  max-width: 760px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.help-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px 14px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.help-modal-title { font-size: 1rem; font-weight: 700; color: var(--text); }
+.help-close-btn {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+.help-close-btn:hover { background: var(--border); color: var(--text); }
+.help-nav {
+  display: flex;
+  gap: 4px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+.help-nav-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--muted);
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.help-nav-btn:hover { color: var(--text); border-color: var(--border); }
+.help-nav-btn.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+.help-body {
+  padding: 22px 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+.help-body-title { font-size: 1.1rem; font-weight: 700; margin: 0 0 18px; color: var(--text); }
+.help-section { margin-bottom: 24px; }
+.help-section h3 { font-size: 13px; font-weight: 700; color: var(--blue); margin: 0 0 8px; text-transform: uppercase; letter-spacing: 0.05em; }
+.help-section p { font-size: 13px; color: var(--text); line-height: 1.7; margin: 0 0 8px; }
+.help-list { margin: 6px 0 0 18px; padding: 0; }
+.help-list li { font-size: 13px; color: var(--text); line-height: 1.7; margin-bottom: 4px; }
+.help-table-wrap { overflow-x: auto; }
+.help-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 6px; }
+.help-table th { background: var(--surface2); color: var(--muted); font-weight: 600; text-align: left; padding: 7px 10px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; }
+.help-table td { padding: 8px 10px; border-bottom: 1px solid var(--border)55; color: var(--text); vertical-align: top; }
+.help-table tr:last-child td { border-bottom: none; }

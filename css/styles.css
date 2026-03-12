@@ -468,6 +468,8 @@ textarea.input-field { resize: vertical; }
 .detail-related { margin-top: 8px; font-size: 0.82rem; color: var(--muted); }
 .related-link { color: var(--blue); cursor: pointer; }
 .related-link:hover { text-decoration: underline; }
+.autocomplete-item.search-all-link { color: var(--blue); border-top: 1px solid var(--border); margin-top: 2px; font-size: 0.82rem; }
+.autocomplete-item.disabled { color: var(--muted); cursor: default; font-style: italic; }
 
 /* Timeline */
 .timeline-track { display: flex; flex-direction: column; gap: 0; margin-bottom: 24px; }

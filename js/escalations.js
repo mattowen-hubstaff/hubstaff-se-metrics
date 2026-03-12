@@ -65,7 +65,7 @@ function renderEscalations(escalations) {
         <input id="esc-days" placeholder="Days to resolve" type="number" class="input-field" />
         <textarea id="esc-notes" placeholder="Notes" class="input-field" rows="3"></textarea>
         <div class="autocomplete-wrap">
-          <input id="esc-related-display" placeholder="Related escalation (optional)" class="input-field" autocomplete="off" oninput="filterRelatedSuggestions()" />
+          <input id="esc-related-display" placeholder="Related escalation (optional)" class="input-field" autocomplete="off" onfocus="showRelatedSuggestions()" oninput="filterRelatedSuggestions()" />
           <input id="esc-related-id" type="hidden" value="" />
           <div id="related-suggestions" class="autocomplete-list hidden"></div>
         </div>
@@ -121,26 +121,51 @@ function orgKeydown(e) {
   }
 }
 
+let _relatedSearchAll = false;
+
+function showRelatedSuggestions() {
+  _relatedSearchAll = false;
+  filterRelatedSuggestions();
+}
+
 function filterRelatedSuggestions() {
   const input = document.getElementById('esc-related-display');
   const list = document.getElementById('related-suggestions');
   const val = input.value.trim().toLowerCase();
   const currentOrg = document.getElementById('esc-org').value.trim();
 
-  if (!val) { list.classList.add('hidden'); return; }
+  // Determine pool: current org only, or all orgs
+  let pool = window._escalations;
+  const orgMatches = currentOrg
+    ? pool.filter(e => e.org === currentOrg)
+    : [];
+  const useOrgFilter = !_relatedSearchAll && orgMatches.length > 0;
+  if (useOrgFilter) pool = orgMatches;
 
-  const matches = window._escalations.filter(e =>
-    `${e.org} ${e.type} ${e.date || ''}`.toLowerCase().includes(val)
+  // Filter by typed value if present
+  const matches = (val
+    ? pool.filter(e => `${e.org} ${e.type} ${e.date || ''}`.toLowerCase().includes(val))
+    : pool
   ).slice(0, 8);
 
-  if (matches.length === 0) { list.classList.add('hidden'); return; }
+  if (matches.length === 0 && !useOrgFilter) { list.classList.add('hidden'); return; }
+
+  const showAllLink = useOrgFilter
+    ? `<div class="autocomplete-item search-all-link" onclick="_relatedSearchAll=true;filterRelatedSuggestions()">🔍 Search all organisations…</div>`
+    : '';
+
+  if (matches.length === 0) {
+    list.innerHTML = `<div class="autocomplete-item disabled">No escalations found for ${currentOrg}</div>${showAllLink}`;
+    list.classList.remove('hidden');
+    return;
+  }
 
   list.innerHTML = matches.map(e =>
     `<div class="autocomplete-item" onclick="selectRelated('${e.id}', '${(e.org + ' · ' + e.type + ' · ' + (e.date || '—')).replace(/'/g, "\\'")}')">
       ${e.org} · <span class="tag" style="font-size:0.75rem">${e.type}</span> · ${e.date || '—'}
       <span class="outcome ${e.outcome.toLowerCase().replace(/ /g,'-')}" style="float:right;font-size:0.72rem">${e.outcome}</span>
     </div>`
-  ).join('');
+  ).join('') + showAllLink;
   list.classList.remove('hidden');
 }
 
@@ -163,6 +188,7 @@ function toggleOtherField() {
 }
 
 function showAddEscModal() {
+  _relatedSearchAll = false;
   ['esc-org', 'esc-date', 'esc-days', 'esc-notes', 'esc-other-desc', 'esc-related-display'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('esc-related-id').value = '';
   document.getElementById('esc-other-desc').classList.add('hidden');

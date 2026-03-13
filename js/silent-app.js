@@ -238,10 +238,10 @@ async function kanbanDrop(event, newStage) {
   _draggingId = null;
   if (!impl || impl.stage === newStage) return;
   var stageEnteredAt = Object.assign({}, impl.stage_entered_at || {});
-  stageEnteredAt[newStage] = new Date().toISOString().slice(0,10);
+  stageEnteredAt[newStage] = localDateStr();
   var activity = (Array.isArray(impl.activity) ? impl.activity : []).concat([{
     stage: newStage,
-    date: new Date().toISOString().slice(0,10),
+    date: localDateStr(),
     note: 'Moved from ' + impl.stage + ' to ' + newStage
   }]);
   try {
@@ -493,7 +493,7 @@ async function addActivityEntry(implId) {
 
   if (!note) { showToast('Please add a note', 'error'); return; }
 
-  var entry = { stage: stage, date: new Date().toISOString().slice(0,10), note: note };
+  var entry = { stage: stage, date: localDateStr(), note: note };
   if (rag)         entry.rag         = rag;
   if (urls.length) entry.urls = urls;
 
@@ -566,7 +566,7 @@ async function confirmUnarchive() {
     var impl = window._implementations.find(function(i){ return i.id === id; });
     var entry = {
       stage: stage,
-      date: new Date().toISOString().slice(0,10),
+      date: localDateStr(),
       note: 'Restored from archive: ' + note
     };
     var activity = (Array.isArray(impl.activity) ? impl.activity : []).concat([entry]);
@@ -653,7 +653,7 @@ async function saveImpl() {
   if (!data.org) { showToast('Organisation name is required', 'error'); return; }
   if (!id) {
     data.stage_entered_at = {};
-    data.stage_entered_at[data.stage] = new Date().toISOString().slice(0,10);
+    data.stage_entered_at[data.stage] = localDateStr();
     data.checklist = {};
     data.activity  = [];
   }

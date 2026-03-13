@@ -23,10 +23,7 @@ function renderWeekLog(weeklyMetrics) {
             <label>Escalations Handled</label>
             <input id="wl-escalations" type="number" class="input-field" placeholder="0" />
           </div>
-          <div class="form-group">
-            <label>CSAT Score <span class="target-hint">out of 5</span></label>
-            <input id="wl-csat" type="number" step="0.1" min="0.1" max="5" class="input-field" placeholder="e.g. 4.5" />
-          </div>
+
         </div>
       </div>
 
@@ -89,7 +86,7 @@ function renderWeekLog(weeklyMetrics) {
     <div class="section-title" style="margin-top:32px">All Weekly Data</div>
     <table class="data-table">
       <thead><tr>
-        <th>Week</th><th>Escalations</th><th>Calls</th><th>Docs</th><th>CSAT</th>
+        <th>Week</th><th>Escalations</th><th>Calls</th><th>Docs</th>
         <th>Esc %</th><th>Calls %</th><th>Docs %</th><th>Async %</th><th>Projects %</th>
       </tr></thead>
       <tbody>
@@ -99,7 +96,6 @@ function renderWeekLog(weeklyMetrics) {
             <td>${w.escalations ?? 0}</td>
             <td>${(w.calls_log || []).length || w.calls || 0}</td>
             <td>${(w.docs_log || []).length || w.docs_completed || 0}</td>
-            <td>${w.csat_score ?? '—'}</td>
             <td>${w.time_escalations ?? 0}%</td>
             <td>${w.time_calls ?? 0}%</td>
             <td>${w.time_docs ?? 0}%</td>
@@ -220,7 +216,6 @@ function populateWeekForm() {
   if (!w) return;
 
   document.getElementById('wl-escalations').value = w.escalations ?? '';
-  document.getElementById('wl-csat').value        = w.csat_score ?? '';
   document.getElementById('wl-t-esc').value       = w.time_escalations ?? '';
   document.getElementById('wl-t-calls').value     = w.time_calls ?? '';
   document.getElementById('wl-t-docs').value      = w.time_docs ?? '';
@@ -292,7 +287,6 @@ async function saveWeekLog() {
     calls_log:        cleanCalls,
     docs_completed:   cleanDocs.length,
     docs_log:         cleanDocs,
-    csat_score:       parseFloat2('wl-csat', existing.csat_score ?? null),
     time_escalations: parseNum('wl-t-esc',      existing.time_escalations ?? 0),
     time_calls:       parseNum('wl-t-calls',    existing.time_calls ?? 0),
     time_docs:        parseNum('wl-t-docs',     existing.time_docs ?? 0),

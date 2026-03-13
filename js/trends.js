@@ -281,11 +281,13 @@ function buildDrillContent(chartId, idx, label) {
     const callCards = callsLog.map(c => {
       const relEsc  = c.esc_id  ? escs.find(e => e.id === c.esc_id)   : null;
       const relImpl = c.impl_id ? impls.find(i => i.id === c.impl_id) : null;
+      const chips = [];
+      if (relEsc)  chips.push(`<span class="drill-call-chip esc">⚡ ${relEsc.org} · ${relEsc.type}</span>`);
+      if (relImpl) chips.push(`<span class="drill-call-chip impl">🖥 ${relImpl.org_name || relImpl.org} · ${relImpl.stage}</span>`);
       return `<div class="drill-call-card">
-        <div class="drill-call-org">${c.org || '\u2014'}</div>
+        <div class="drill-call-org">${c.org || '—'}</div>
         ${c.notes ? `<div class="drill-call-notes">${c.notes}</div>` : ''}
-        ${relEsc  ? `<div class="drill-call-link">&#128310; Escalation: <strong>${relEsc.org}</strong> &middot; ${relEsc.type} &middot; <span class="outcome ${relEsc.outcome.toLowerCase().replace(/ /g,'-')}">${relEsc.outcome}</span></div>` : ''}
-        ${relImpl ? `<div class="drill-call-link">&#128187; Implementation: <strong>${relImpl.org}</strong> &middot; ${relImpl.stage}</div>` : ''}
+        ${chips.length ? `<div class="drill-call-chips">${chips.join('')}</div>` : ''}
       </div>`;
     }).join('');
     return `
@@ -320,14 +322,20 @@ function buildDrillContent(chartId, idx, label) {
     if (!week) return drillEmpty(chartId, label);
     const docsLog = Array.isArray(week.docs_log) ? week.docs_log : [];
     if (!docsLog.length) return drillEmpty(chartId, label, `No docs logged for ${label}. Add them in the Week Log tab.`);
-    const docCards = docsLog.map(doc => [
-      '<div class="drill-doc-card">',
-      doc.url
-        ? `<div class="drill-doc-title"><a href="${doc.url}" target="_blank" class="drill-doc-link">&#128196; ${doc.title || 'Untitled'}</a></div>`
-        : `<div class="drill-doc-title"><span>&#128196; ${doc.title || 'Untitled'}</span></div>`,
-      doc.notes ? `<div class="drill-doc-notes">${doc.notes}</div>` : '',
-      '</div>'
-    ].join('')).join('');
+    const docCards = docsLog.map(doc => {
+      const hasUrl = !!doc.url;
+      return [
+        '<div class="drill-doc-card">',
+        '<div class="drill-doc-title">',
+        hasUrl
+          ? `<a href="${doc.url}" target="_blank" class="drill-doc-link">📄 ${doc.title || 'Untitled'} ↗</a>`
+          : `📄 ${doc.title || 'Untitled'}`,
+        '</div>',
+        hasUrl ? `<div class="drill-doc-url">${doc.url}</div>` : '',
+        doc.notes ? `<div class="drill-doc-notes">${doc.notes}</div>` : '',
+        '</div>'
+      ].join('');
+    }).join('');
     return `
       <div class="drill-header">
         <span class="drill-title">&#128196; ${label} &mdash; Documentation (${docsLog.length})</span>
@@ -431,6 +439,7 @@ function buildDrillContent(chartId, idx, label) {
 
 function implCard(i, showTotalDays) {
   const ragEmoji = { Green: '🟢', Amber: '🟡', Red: '🔴' }[i.rag] || '⚪';
+  const ragClass = { Green: 'rag-green', Amber: 'rag-amber', Red: 'rag-red' }[i.rag] || '';
   const CHECKLISTS = window.STAGE_CHECKLISTS || {};
   const items = CHECKLISTS[i.stage] || [];
   const checklist = i.checklist || {};
@@ -443,7 +452,7 @@ function implCard(i, showTotalDays) {
     const stab = (i.stage_entered_at)['Stability'];
     if (pre && stab) {
       const days = Math.round((new Date(stab) - new Date(pre)) / 86400000);
-      daysStr = '<span class="drill-days-badge">' + days + ' days total</span>';
+      daysStr = '<span class="drill-days-badge">' + days + 'd total</span>';
     }
   } else if (i.stage_entered_at && i.stage_entered_at[i.stage]) {
     const daysIn = Math.round((new Date() - new Date(i.stage_entered_at[i.stage])) / 86400000);
@@ -454,10 +463,11 @@ function implCard(i, showTotalDays) {
   if (i.hubspot_url) links.push('<a href="' + i.hubspot_url + '" target="_blank" class="drill-link">HubSpot ↗</a>');
   if (i.slack_url)   links.push('<a href="' + i.slack_url   + '" target="_blank" class="drill-link">Slack ↗</a>');
 
-  return '<div class="drill-impl-card">' +
+  return '<div class="drill-impl-card ' + ragClass + '">' +
     '<div class="drill-impl-header">' +
       '<span class="drill-impl-name">' + (i.org_name || i.org || 'Unknown') + '</span>' +
-      '<span class="drill-impl-meta">' + ragEmoji + ' ' + (i.rag||'—') + ' &nbsp;·&nbsp; ' + i.stage + '</span>' +
+      '<span class="drill-impl-stage-pill">' + i.stage + '</span>' +
+      '<span class="drill-impl-meta">' + ragEmoji + ' ' + (i.rag || '—') + '</span>' +
       daysStr +
     '</div>' +
     '<div class="drill-impl-detail">' +

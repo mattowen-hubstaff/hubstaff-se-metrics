@@ -388,65 +388,64 @@ function renderImplDetail(impl, allImpls) {
 
   document.getElementById('silent-app-content').innerHTML =
     '<div class="detail-back" onclick="closeImplDetail()">&#8592; Back to implementations</div>' +
-    '<div class="detail-wrap">' +
+    '<div class="detail-single">' +
 
-      // Left column
-      '<div class="detail-main">' +
-        '<div class="detail-card">' +
-          '<div class="detail-card-header">' +
-            '<div>' +
-              '<div class="detail-org">' + impl.org + '</div>' +
-              '<div class="detail-meta">' + (impl.contact_name||'') + (impl.contact_email?' &nbsp;·&nbsp; <a href="mailto:'+impl.contact_email+'" style="color:var(--blue)">'+impl.contact_email+'</a>':'') + '</div>' +
-              '<div class="detail-meta" style="margin-top:4px">' +
-                (impl.org_size ? impl.org_size + ' devices' : '') +
-                (os.length ? ' &nbsp;·&nbsp; ' + os.join(', ') : '') +
-                (impl.deployment_method ? ' &nbsp;·&nbsp; ' + impl.deployment_method : '') +
-                (impl.mdm_type ? ' &nbsp;·&nbsp; MDM: ' + impl.mdm_type : '') +
-              '</div>' +
-              ((impl.hubspot_url || impl.slack_url) ? '<div class="detail-meta" style="margin-top:6px">' +
-                (impl.hubspot_url ? '<a href="' + impl.hubspot_url + '" target="_blank" class="activity-link">🔗 HubSpot</a>' : '') +
-                (impl.hubspot_url && impl.slack_url ? ' &nbsp;' : '') +
-                (impl.slack_url ? '<a href="' + impl.slack_url + '" target="_blank" class="activity-link">💬 Slack</a>' : '') +
-              '</div>' : '') +
+      // Header card
+      '<div class="detail-card">' +
+        '<div class="detail-card-header">' +
+          '<div>' +
+            '<div class="detail-org">' + impl.org + '</div>' +
+            '<div class="detail-meta">' + (impl.contact_name||'') + (impl.contact_email?' &nbsp;·&nbsp; <a href="mailto:'+impl.contact_email+'" style="color:var(--blue)">'+impl.contact_email+'</a>':'') + '</div>' +
+            '<div class="detail-meta" style="margin-top:4px">' +
+              (impl.org_size ? impl.org_size + ' devices' : '') +
+              (os.length ? ' &nbsp;·&nbsp; ' + os.join(', ') : '') +
+              (impl.deployment_method ? ' &nbsp;·&nbsp; ' + impl.deployment_method : '') +
+              (impl.mdm_type ? ' &nbsp;·&nbsp; MDM: ' + impl.mdm_type : '') +
             '</div>' +
-            '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">' +
-              '<span class="rag-badge-lg" style="background:' + ragColour + '22;color:' + ragColour + ';border:1px solid ' + ragColour + '66">' + ragEmoji + ' ' + impl.rag + '</span>' +
-              (impl.csat ? '<span class="csat-badge">CSAT ' + impl.csat + '/10</span>' : '') +
-              '<button class="btn-secondary btn-sm" onclick="editImpl(\'' + impl.id + '\')">Edit</button>' +
-              (impl.stage === 'Stability' ? '<button class="btn-archive btn-sm" onclick="archiveImpl(\'' + impl.id + '\')">🗄 Archive</button>' : '') +
-              (impl.stage === 'Archived'  ? '<button class="btn-secondary btn-sm" onclick="unarchiveImpl(\'' + impl.id + '\')">↩ Unarchive</button>' : '') +
-            '</div>' +
+            ((impl.hubspot_url || impl.slack_url) ? '<div class="detail-meta" style="margin-top:6px">' +
+              (impl.hubspot_url ? '<a href="' + impl.hubspot_url + '" target="_blank" class="activity-link">🔗 HubSpot</a>' : '') +
+              (impl.hubspot_url && impl.slack_url ? ' &nbsp;' : '') +
+              (impl.slack_url ? '<a href="' + impl.slack_url + '" target="_blank" class="activity-link">💬 Slack</a>' : '') +
+            '</div>' : '') +
           '</div>' +
-          pipelineHtml +
-          (impl.notes ? '<div class="detail-notes">' + impl.notes + '</div>' : '') +
+          '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">' +
+            '<span class="rag-badge-lg" style="background:' + ragColour + '22;color:' + ragColour + ';border:1px solid ' + ragColour + '66">' + ragEmoji + ' ' + impl.rag + '</span>' +
+            (impl.csat ? '<span class="csat-badge">CSAT ' + impl.csat + '/10</span>' : '') +
+            '<button class="btn-secondary btn-sm" onclick="editImpl(\'' + impl.id + '\')">Edit</button>' +
+            (impl.stage === 'Stability' ? '<button class="btn-archive btn-sm" onclick="archiveImpl(\'' + impl.id + '\')">🗄 Archive</button>' : '') +
+            (impl.stage === 'Archived'  ? '<button class="btn-secondary btn-sm" onclick="unarchiveImpl(\'' + impl.id + '\')">↩ Unarchive</button>' : '') +
+          '</div>' +
         '</div>' +
-        checklistsHtml +
-        linkedHtml +
+        pipelineHtml +
+        (impl.notes ? '<div class="detail-notes">' + impl.notes + '</div>' : '') +
       '</div>' +
 
-      // Right column — activity log
-      '<div class="detail-sidebar">' +
-        '<div class="activity-card">' +
-          '<div class="activity-header">Activity Log</div>' +
-          '<div class="activity-form">' +
-            '<select id="act-stage" class="input-field input-sm">' +
-              STAGES.map(function(s){ return '<option value="'+s+'"'+(impl.stage===s?' selected':'')+'>'+s+'</option>'; }).join('') +
-              '<option value="Note">Note only</option>' +
-            '</select>' +
-            '<select id="act-rag" class="input-field input-sm">' +
-              '<option value="">RAG unchanged</option>' +
-              '<option value="Green">Green</option>' +
-              '<option value="Amber">Amber</option>' +
-              '<option value="Red">Red</option>' +
-            '</select>' +
-            '<textarea id="act-note" placeholder="What happened? What\'s next?" class="input-field" rows="3"></textarea>' +
-            '<div id="act-urls-container"></div>' +
-            '<button type="button" class="btn-secondary btn-sm" style="width:100%;margin-bottom:4px" onclick="addUrlField()">+ Add URL</button>' +
-            '<button class="btn-primary btn-sm" style="width:100%" onclick="addActivityEntry(\'' + impl.id + '\')">Add Entry</button>' +
-          '</div>' +
-          '<div class="activity-timeline">' + timelineHtml + '</div>' +
+      // Checklists + linked escalations
+      checklistsHtml +
+      linkedHtml +
+
+      // Activity log — form + scrollable entries
+      '<div class="activity-card">' +
+        '<div class="activity-header">Activity Log</div>' +
+        '<div class="activity-form">' +
+          '<select id="act-stage" class="input-field input-sm">' +
+            STAGES.map(function(s){ return '<option value="'+s+'"'+(impl.stage===s?' selected':'')+'>'+s+'</option>'; }).join('') +
+            '<option value="Note">Note only</option>' +
+          '</select>' +
+          '<select id="act-rag" class="input-field input-sm">' +
+            '<option value="">RAG unchanged</option>' +
+            '<option value="Green">Green</option>' +
+            '<option value="Amber">Amber</option>' +
+            '<option value="Red">Red</option>' +
+          '</select>' +
+          '<textarea id="act-note" placeholder="What happened? What\'s next?" class="input-field" rows="3"></textarea>' +
+          '<div id="act-urls-container"></div>' +
+          '<button type="button" class="btn-secondary btn-sm" style="width:100%;margin-bottom:4px" onclick="addUrlField()">+ Add URL</button>' +
+          '<button class="btn-primary btn-sm" style="width:100%" onclick="addActivityEntry(\'' + impl.id + '\')">Add Entry</button>' +
         '</div>' +
+        '<div class="activity-timeline">' + timelineHtml + '</div>' +
       '</div>' +
+
     '</div>' +
     renderImplModal(impl) +
     renderUnarchiveModal();

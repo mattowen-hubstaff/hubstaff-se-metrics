@@ -1,5 +1,9 @@
 // Week log tab — enter weekly numbers
 
+// ── State for dynamic lists ────────────────────────────────────────────────
+let _wlCallsLog = [];   // [{ org, notes, esc_id, impl_id }]
+let _wlDocsLog  = [];   // [{ title, url, notes }]
+
 function renderWeekLog(weeklyMetrics) {
   document.getElementById('week-log-content').innerHTML = `
     <div class="week-log-form">
@@ -16,19 +20,20 @@ function renderWeekLog(weeklyMetrics) {
           <input id="wl-escalations" type="number" class="input-field" placeholder="0" />
         </div>
         <div class="form-group">
-          <label>Calls Joined</label>
-          <input id="wl-calls" type="number" class="input-field" placeholder="0" />
-        </div>
-        <div class="form-group">
-          <label>Docs Completed</label>
-          <input id="wl-docs" type="number" class="input-field" placeholder="0" />
-        </div>
-        <div class="form-group">
           <label>CSAT Score (out of 5)</label>
           <input id="wl-csat" type="number" step="0.1" min="0.1" max="5" class="input-field" placeholder="e.g. 4.5" />
         </div>
       </div>
-      <div class="section-title" style="margin-top:20px">Time Distribution — Actuals (%)</div>
+
+      <div class="section-title" style="margin-top:24px">Calls Joined</div>
+      <div id="wl-calls-list" class="wl-item-list"></div>
+      <button class="btn-secondary" style="margin-top:8px" onclick="wlAddCall()">+ Add Call</button>
+
+      <div class="section-title" style="margin-top:24px">Docs Completed</div>
+      <div id="wl-docs-list" class="wl-item-list"></div>
+      <button class="btn-secondary" style="margin-top:8px" onclick="wlAddDoc()">+ Add Doc</button>
+
+      <div class="section-title" style="margin-top:24px">Time Distribution — Actuals (%)</div>
       <div class="form-grid">
         <div class="form-group">
           <label>Escalations & Investigations <span class="target-hint">(target ${TIME_TARGETS.escalations}%)</span></label>
@@ -53,6 +58,7 @@ function renderWeekLog(weeklyMetrics) {
       </div>
       <button class="btn-primary" style="margin-top:20px" onclick="saveWeekLog()">Save Week</button>
     </div>
+
     <div class="section-title" style="margin-top:32px">All Weekly Data</div>
     <table class="data-table">
       <thead><tr>
@@ -64,8 +70,8 @@ function renderWeekLog(weeklyMetrics) {
           <tr>
             <td>${w.week}</td>
             <td>${w.escalations ?? 0}</td>
-            <td>${w.calls ?? 0}</td>
-            <td>${w.docs_completed ?? 0}</td>
+            <td>${(w.calls_log || []).length || w.calls || 0}</td>
+            <td>${(w.docs_log || []).length || w.docs_completed || 0}</td>
             <td>${w.csat_score ?? '—'}</td>
             <td>${w.time_escalations ?? 0}%</td>
             <td>${w.time_calls ?? 0}%</td>
@@ -78,20 +84,123 @@ function renderWeekLog(weeklyMetrics) {
   `;
 }
 
+// ── Dynamic list renderers ─────────────────────────────────────────────────
+
+function wlRenderCalls() {
+  const escs  = window._escalations || [];
+  const impls = window._implementations || [];
+  const container = document.getElementById('wl-calls-list');
+  if (!container) return;
+
+  if (!_wlCallsLog.length) {
+    container.innerHTML = '<div class="wl-empty">No calls logged yet.</div>';
+    return;
+  }
+
+  container.innerHTML = _wlCallsLog.map((call, i) => `
+    <div class="wl-item">
+      <div class="wl-item-row">
+        <input class="input-field wl-field-wide" placeholder="Org / company name"
+          value="${call.org || ''}"
+          oninput="_wlCallsLog[${i}].org = this.value" />
+        <button class="wl-remove-btn" onclick="wlRemoveCall(${i})">✕</button>
+      </div>
+      <div class="wl-item-row">
+        <textarea class="input-field wl-field-wide" rows="2" placeholder="Notes / outcome"
+          oninput="_wlCallsLog[${i}].notes = this.value">${call.notes || ''}</textarea>
+      </div>
+      <div class="wl-item-row wl-link-row">
+        <div class="wl-link-group">
+          <label class="wl-link-label">Related Escalation</label>
+          <select class="input-field wl-field-link" onchange="_wlCallsLog[${i}].esc_id = this.value">
+            <option value="">— None —</option>
+            ${escs.map(e => `<option value="${e.id}" ${call.esc_id === e.id ? 'selected' : ''}>${e.org} · ${e.type} · ${e.date}</option>`).join('')}
+          </select>
+        </div>
+        <div class="wl-link-group">
+          <label class="wl-link-label">Related Implementation</label>
+          <select class="input-field wl-field-link" onchange="_wlCallsLog[${i}].impl_id = this.value">
+            <option value="">— None —</option>
+            ${impls.map(im => `<option value="${im.id}" ${call.impl_id === im.id ? 'selected' : ''}>${im.org} · ${im.stage}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function wlRenderDocs() {
+  const container = document.getElementById('wl-docs-list');
+  if (!container) return;
+
+  if (!_wlDocsLog.length) {
+    container.innerHTML = '<div class="wl-empty">No docs logged yet.</div>';
+    return;
+  }
+
+  container.innerHTML = _wlDocsLog.map((doc, i) => `
+    <div class="wl-item">
+      <div class="wl-item-row">
+        <input class="input-field wl-field-wide" placeholder="Document title"
+          value="${doc.title || ''}"
+          oninput="_wlDocsLog[${i}].title = this.value" />
+        <button class="wl-remove-btn" onclick="wlRemoveDoc(${i})">✕</button>
+      </div>
+      <div class="wl-item-row">
+        <input class="input-field wl-field-wide" placeholder="URL (optional)"
+          value="${doc.url || ''}"
+          oninput="_wlDocsLog[${i}].url = this.value" />
+      </div>
+      <div class="wl-item-row">
+        <textarea class="input-field wl-field-wide" rows="2" placeholder="Notes (optional)"
+          oninput="_wlDocsLog[${i}].notes = this.value">${doc.notes || ''}</textarea>
+      </div>
+    </div>
+  `).join('');
+}
+
+function wlAddCall() {
+  _wlCallsLog.push({ org: '', notes: '', esc_id: '', impl_id: '' });
+  wlRenderCalls();
+}
+
+function wlAddDoc() {
+  _wlDocsLog.push({ title: '', url: '', notes: '' });
+  wlRenderDocs();
+}
+
+function wlRemoveCall(i) {
+  _wlCallsLog.splice(i, 1);
+  wlRenderCalls();
+}
+
+function wlRemoveDoc(i) {
+  _wlDocsLog.splice(i, 1);
+  wlRenderDocs();
+}
+
+// ── Form population ────────────────────────────────────────────────────────
+
 function populateWeekForm() {
   const id = document.getElementById('wl-week').value;
   const w = window._weeklyMetrics.find(m => m.id === id);
   if (!w) return;
+
   document.getElementById('wl-escalations').value = w.escalations ?? '';
-  document.getElementById('wl-calls').value = w.calls ?? '';
-  document.getElementById('wl-docs').value = w.docs_completed ?? '';
-  document.getElementById('wl-csat').value = w.csat_score ?? '';
-  document.getElementById('wl-t-esc').value = w.time_escalations ?? '';
-  document.getElementById('wl-t-calls').value = w.time_calls ?? '';
-  document.getElementById('wl-t-docs').value = w.time_docs ?? '';
-  document.getElementById('wl-t-async').value = w.time_async ?? '';
-  document.getElementById('wl-t-projects').value = w.time_projects ?? '';
+  document.getElementById('wl-csat').value        = w.csat_score ?? '';
+  document.getElementById('wl-t-esc').value       = w.time_escalations ?? '';
+  document.getElementById('wl-t-calls').value     = w.time_calls ?? '';
+  document.getElementById('wl-t-docs').value      = w.time_docs ?? '';
+  document.getElementById('wl-t-async').value     = w.time_async ?? '';
+  document.getElementById('wl-t-projects').value  = w.time_projects ?? '';
+
+  _wlCallsLog = Array.isArray(w.calls_log) ? JSON.parse(JSON.stringify(w.calls_log)) : [];
+  _wlDocsLog  = Array.isArray(w.docs_log)  ? JSON.parse(JSON.stringify(w.docs_log))  : [];
+  wlRenderCalls();
+  wlRenderDocs();
 }
+
+// ── Save ───────────────────────────────────────────────────────────────────
 
 async function saveWeekLog() {
   const id = document.getElementById('wl-week').value;
@@ -108,17 +217,32 @@ async function saveWeekLog() {
     return Math.min(5, Math.max(0.1, num));
   };
 
+  const cleanCalls = _wlCallsLog.map(c => ({
+    org:     c.org || '',
+    notes:   c.notes || '',
+    esc_id:  c.esc_id  || null,
+    impl_id: c.impl_id || null,
+  }));
+  const cleanDocs = _wlDocsLog.map(d => ({
+    title: d.title || '',
+    url:   d.url   || '',
+    notes: d.notes || '',
+  }));
+
   const data = {
     escalations:      parseNum('wl-escalations', existing.escalations ?? 0),
-    calls:            parseNum('wl-calls',        existing.calls ?? 0),
-    docs_completed:   parseNum('wl-docs',         existing.docs_completed ?? 0),
-    csat_score:       parseFloat2('wl-csat',      existing.csat_score ?? null),
-    time_escalations: parseNum('wl-t-esc',        existing.time_escalations ?? 0),
-    time_calls:       parseNum('wl-t-calls',      existing.time_calls ?? 0),
-    time_docs:        parseNum('wl-t-docs',       existing.time_docs ?? 0),
-    time_async:       parseNum('wl-t-async',      existing.time_async ?? 0),
-    time_projects:    parseNum('wl-t-projects',   existing.time_projects ?? 0),
+    calls:            cleanCalls.length,
+    calls_log:        cleanCalls,
+    docs_completed:   cleanDocs.length,
+    docs_log:         cleanDocs,
+    csat_score:       parseFloat2('wl-csat', existing.csat_score ?? null),
+    time_escalations: parseNum('wl-t-esc',      existing.time_escalations ?? 0),
+    time_calls:       parseNum('wl-t-calls',    existing.time_calls ?? 0),
+    time_docs:        parseNum('wl-t-docs',     existing.time_docs ?? 0),
+    time_async:       parseNum('wl-t-async',    existing.time_async ?? 0),
+    time_projects:    parseNum('wl-t-projects', existing.time_projects ?? 0),
   };
+
   showToast('Saving…', 'info');
   try {
     await updateWeeklyMetric(id, data);

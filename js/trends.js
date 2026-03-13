@@ -89,9 +89,8 @@ function renderTrends(weeklyMetrics, implementations) {
     return { start: fmt(mon), end: fmt(sun) };
   }
 
-  // Derive week number from the label (e.g. "W1" -> 1, "W2" -> 2).
-  // W1 = current week, W2 = last week (descending). More reliable than
-  // week_index from Supabase which can be null or mismatched.
+  // Derive week number from label ("W1"->1, "W2"->2). W1=current week (descending).
+  // More reliable than week_index which can be null in Supabase.
   function weekNum(w) {
     return parseInt((w.week || 'W1').replace(/[^0-9]/g, '')) || 1;
   }
@@ -275,16 +274,28 @@ function buildDrillContent(chartId, idx, label) {
   if (d.type === 'weekly-calls') {
     const week = d.weeks[idx];
     if (!week) return drillEmpty(chartId, label);
+    const callsLog = Array.isArray(week.calls_log) ? week.calls_log : [];
+    const escs  = window._escalations     || [];
+    const impls = window._implementations || [];
+    if (!callsLog.length) return drillEmpty(chartId, label, `No calls logged for ${label}. Add them in the Week Log tab.`);
+    const callCards = callsLog.map(c => {
+      const relEsc  = c.esc_id  ? escs.find(e => e.id === c.esc_id)   : null;
+      const relImpl = c.impl_id ? impls.find(i => i.id === c.impl_id) : null;
+      return `<div class="drill-call-card">
+        <div class="drill-call-org">${c.org || '\u2014'}</div>
+        ${c.notes ? `<div class="drill-call-notes">${c.notes}</div>` : ''}
+        ${relEsc  ? `<div class="drill-call-link">&#128310; Escalation: <strong>${relEsc.org}</strong> &middot; ${relEsc.type} &middot; <span class="outcome ${relEsc.outcome.toLowerCase().replace(/ /g,'-')}">${relEsc.outcome}</span></div>` : ''}
+        ${relImpl ? `<div class="drill-call-link">&#128187; Implementation: <strong>${relImpl.org}</strong> &middot; ${relImpl.stage}</div>` : ''}
+      </div>`;
+    }).join('');
     return `
       <div class="drill-header">
-        <span class="drill-title">📞 ${label} — Calls (${week.calls || 0})</span>
-        <button class="drill-close" onclick="closeDrillById('${chartId}')">✕ Close</button>
+        <span class="drill-title">&#128222; ${label} &mdash; Calls (${callsLog.length})</span>
+        <button class="drill-close" onclick="closeDrillById('${chartId}')">&#x2715; Close</button>
       </div>
-      <div class="drill-detail-grid">
-        ${drillStat('Calls Joined', week.calls || 0)}
-      </div>
-      ${week.call_notes ? `<div class="drill-note-block"><strong>Notes:</strong> ${week.call_notes}</div>` : '<div class="drill-no-detail">No call notes for this week. Add them in the Week Log tab.</div>'}`;
+      <div class="drill-call-list">${callCards}</div>`;
   }
+
 
   if (d.type === 'weekly-csat') {
     const week = d.weeks[idx];
@@ -307,16 +318,24 @@ function buildDrillContent(chartId, idx, label) {
   if (d.type === 'weekly-docs') {
     const week = d.weeks[idx];
     if (!week) return drillEmpty(chartId, label);
+    const docsLog = Array.isArray(week.docs_log) ? week.docs_log : [];
+    if (!docsLog.length) return drillEmpty(chartId, label, `No docs logged for ${label}. Add them in the Week Log tab.`);
+    const docCards = docsLog.map(doc => [
+      '<div class="drill-doc-card">',
+      doc.url
+        ? `<div class="drill-doc-title"><a href="${doc.url}" target="_blank" class="drill-doc-link">&#128196; ${doc.title || 'Untitled'}</a></div>`
+        : `<div class="drill-doc-title"><span>&#128196; ${doc.title || 'Untitled'}</span></div>`,
+      doc.notes ? `<div class="drill-doc-notes">${doc.notes}</div>` : '',
+      '</div>'
+    ].join('')).join('');
     return `
       <div class="drill-header">
-        <span class="drill-title">📄 ${label} — Documentation (${week.docs_completed || 0})</span>
-        <button class="drill-close" onclick="closeDrillById('${chartId}')">✕ Close</button>
+        <span class="drill-title">&#128196; ${label} &mdash; Documentation (${docsLog.length})</span>
+        <button class="drill-close" onclick="closeDrillById('${chartId}')">&#x2715; Close</button>
       </div>
-      <div class="drill-detail-grid">
-        ${drillStat('Docs Completed', week.docs_completed || 0)}
-      </div>
-      ${week.docs_notes ? `<div class="drill-note-block"><strong>Notes:</strong> ${week.docs_notes}</div>` : '<div class="drill-no-detail">No doc notes. Add them in the Week Log tab.</div>'}`;
+      <div class="drill-doc-list">${docCards}</div>`;
   }
+
 
   if (d.type === 'sa-stage') {
     const stageKey = d.stageKeys[idx];

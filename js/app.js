@@ -36,7 +36,7 @@ function renderTab(tab) {
     case 'silent-app': renderSilentApp(window._implementations); break;
     case 'escalations': renderEscalations(window._escalations); break;
     case 'insights':    renderInsights(window._escalations); break;
-    case 'trends':     renderTrends(window._weeklyMetrics); break;
+    case 'trends':     renderTrends(window._weeklyMetrics, window._implementations); break;
     case 'week-log':   renderWeekLog(window._weeklyMetrics); populateWeekForm(); break;
   }
 }

@@ -1,4 +1,4 @@
-// Trends tab — week-on-week charts with click-to-pin tooltips
+// Trends tab — week-on-week charts + Silent App implementation metrics
 
 const CHART_CONTEXT = {
   escalations: {
@@ -20,62 +20,186 @@ const CHART_CONTEXT = {
     title: 'Docs Completed per Week',
     why: 'Tracks documentation output — guides, runbooks, Outline pages. Reduces repeat escalations over time and builds the knowledge base for the wider Support team.',
     good: (v) => v === 0 ? 'No docs completed this week.' : v === 1 ? '1 doc — steady contribution.' : v <= 3 ? `${v} docs — strong output.` : `${v} docs — excellent. High documentation weeks compound over time.`
+  },
+  saStage: {
+    title: 'Implementations by Stage',
+    why: 'Snapshot of where all active Silent App implementations currently sit in the pipeline. A healthy pipeline should have orgs moving through steadily with few stuck in Pre-Deployment.',
+    good: (v) => `${v} implementation${v !== 1 ? 's' : ''} in this stage.`
+  },
+  saNew: {
+    title: 'New Implementations per Week',
+    why: 'Tracks how many new Silent App deployments were kicked off each week. Rising trend shows growing adoption and demand for the SE role.',
+    good: (v) => v === 0 ? 'No new implementations this week.' : v === 1 ? '1 new implementation started.' : `${v} new implementations — strong week.`
+  },
+  saStable: {
+    title: 'Implementations Reached Stability per Week',
+    why: 'How many deployments completed successfully each week. This is the key output metric for the Silent App workstream — each stable implementation is a fully delivered deployment.',
+    good: (v) => v === 0 ? 'No implementations reached Stability this week.' : v === 1 ? '1 deployment completed — solid.' : `${v} deployments completed — excellent week.`
+  },
+  saTime: {
+    title: 'Avg. Days to Stability',
+    why: 'Average time from Pre-Deployment to Stability across all completed implementations. Lower is better, but complex MDM environments take longer — use this to spot outliers and set realistic expectations.',
+    good: (v) => v === 0 ? 'No completed implementations yet.' : v <= 14 ? `${v} days avg — fast deployment.` : v <= 30 ? `${v} days avg — typical range.` : `${v} days avg — longer than usual. Check for blockers.`
   }
 };
 
 let _pinnedTooltip = null;
 
-function renderTrends(weeklyMetrics) {
+function renderTrends(weeklyMetrics, implementations) {
+  const impls = (implementations || []).filter(i => i.stage !== 'Archived');
   const weeks = weeklyMetrics.map(w => w.week);
   const escalationsData = weeklyMetrics.map(w => w.escalations || 0);
-  const callsData = weeklyMetrics.map(w => w.calls || 0);
-  const csatData = weeklyMetrics.map(w => w.csat_score || 0);
-  const docsData = weeklyMetrics.map(w => w.docs_completed || 0);
+  const callsData       = weeklyMetrics.map(w => w.calls || 0);
+  const csatData        = weeklyMetrics.map(w => w.csat_score || 0);
+  const docsData        = weeklyMetrics.map(w => w.docs_completed || 0);
+
+  // ── Silent App: stage snapshot ────────────────────────────────────────────
+  const stageLabels = ['Pre-Dep', 'Deploy', 'Validation', 'Stability'];
+  const stageKeys   = ['Pre-Deployment', 'Deployment', 'Validation', 'Stability'];
+  const stageCounts = stageKeys.map(s => impls.filter(i => i.stage === s).length);
+
+  // ── Derive week date boundaries from week_index (Mon–Sun) ──────────────────
+  // week_index 1 = most recent week. We anchor to today and work backwards.
+  const today = new Date();
+  const dayOfWeek = today.getDay(); // 0=Sun
+  const thisMon = new Date(today);
+  thisMon.setDate(today.getDate() - ((dayOfWeek + 6) % 7));
+  thisMon.setHours(0,0,0,0);
+
+  function weekBounds(wIdx) {
+    // wIdx=1 is current week, wIdx=2 is last week, etc.
+    const mon = new Date(thisMon);
+    mon.setDate(thisMon.getDate() - (wIdx - 1) * 7);
+    const sun = new Date(mon);
+    sun.setDate(mon.getDate() + 6);
+    const fmt = d => d.toISOString().slice(0,10);
+    return { start: fmt(mon), end: fmt(sun) };
+  }
+
+  // ── Silent App: new per week (using created_at) ───────────────────────────
+  const saNewData = weeklyMetrics.map(w => {
+    const { start, end } = weekBounds(w.week_index || 1);
+    return impls.filter(i => {
+      if (!i.created_at) return false;
+      const d = i.created_at.slice(0, 10);
+      return d >= start && d <= end;
+    }).length;
+  });
+
+  // ── Silent App: reached Stability per week ────────────────────────────────
+  const saStableData = weeklyMetrics.map(w => {
+    const { start, end } = weekBounds(w.week_index || 1);
+    return impls.filter(i => {
+      const entered = (i.stage_entered_at || {})['Stability'];
+      if (!entered) return false;
+      return entered >= start && entered <= end;
+    }).length;
+  });
+
+  // ── Silent App: avg days to stability ─────────────────────────────────────
+  const completed = impls.filter(i => {
+    const sea = i.stage_entered_at || {};
+    return sea['Pre-Deployment'] && sea['Stability'];
+  });
+  let avgDaysData = [];
+  if (weeks.length > 0) {
+    // rolling: avg of all completed by end of that week
+    avgDaysData = weeklyMetrics.map(w => {
+      const { end } = weekBounds(w.week_index || 1);
+      const done = completed.filter(i => {
+        const stab = (i.stage_entered_at || {})['Stability'];
+        return stab && stab <= end;
+      });
+      if (!done.length) return 0;
+      const total = done.reduce((sum, i) => {
+        const start = new Date((i.stage_entered_at || {})['Pre-Deployment']);
+        const end   = new Date((i.stage_entered_at || {})['Stability']);
+        return sum + Math.round((end - start) / 86400000);
+      }, 0);
+      return Math.round(total / done.length);
+    });
+  }
+
+  // ── RAG summary stats ──────────────────────────────────────────────────────
+  const ragGreen = impls.filter(i => i.rag === 'Green').length;
+  const ragAmber = impls.filter(i => i.rag === 'Amber').length;
+  const ragRed   = impls.filter(i => i.rag === 'Red').length;
+  const totalActive = impls.length;
 
   document.getElementById('trends-content').innerHTML = `
     <div id="chart-tooltip" class="chart-tooltip hidden"></div>
+
+    <div class="trends-section-label">📊 Weekly Activity</div>
     <div class="chart-grid">
       <div class="chart-card">
         <div class="chart-title">${CHART_CONTEXT.escalations.title}</div>
-        <canvas id="chart-esc" height="300"></canvas>
+        <canvas id="chart-esc" height="220"></canvas>
       </div>
       <div class="chart-card">
         <div class="chart-title">${CHART_CONTEXT.calls.title}</div>
-        <canvas id="chart-calls" height="300"></canvas>
+        <canvas id="chart-calls" height="220"></canvas>
       </div>
       <div class="chart-card">
         <div class="chart-title">${CHART_CONTEXT.csat.title}</div>
-        <canvas id="chart-csat" height="300"></canvas>
+        <canvas id="chart-csat" height="220"></canvas>
       </div>
       <div class="chart-card">
         <div class="chart-title">${CHART_CONTEXT.docs.title}</div>
-        <canvas id="chart-docs" height="300"></canvas>
+        <canvas id="chart-docs" height="220"></canvas>
+      </div>
+    </div>
+
+    <div class="trends-section-label">🤫 Silent App</div>
+    <div class="sa-rag-summary">
+      <div class="rag-stat green"><span class="rag-stat-num">${ragGreen}</span><span class="rag-stat-lbl">🟢 On Track</span></div>
+      <div class="rag-stat amber"><span class="rag-stat-num">${ragAmber}</span><span class="rag-stat-lbl">🟡 Needs Attention</span></div>
+      <div class="rag-stat red"><span class="rag-stat-num">${ragRed}</span><span class="rag-stat-lbl">🔴 At Risk</span></div>
+      <div class="rag-stat neutral"><span class="rag-stat-num">${totalActive}</span><span class="rag-stat-lbl">Active Total</span></div>
+    </div>
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-title">${CHART_CONTEXT.saStage.title}</div>
+        <canvas id="chart-sa-stage" height="220"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">${CHART_CONTEXT.saNew.title}</div>
+        <canvas id="chart-sa-new" height="220"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">${CHART_CONTEXT.saStable.title}</div>
+        <canvas id="chart-sa-stable" height="220"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">${CHART_CONTEXT.saTime.title}</div>
+        <canvas id="chart-sa-time" height="220"></canvas>
       </div>
     </div>
   `;
 
   document.getElementById('trends-content').addEventListener('click', (e) => {
-    if (!e.target.closest('#chart-tooltip') && !e.target.closest('canvas')) {
-      hideTooltip();
-    }
+    if (!e.target.closest('#chart-tooltip') && !e.target.closest('canvas')) hideTooltip();
   });
 
+  // Weekly activity charts
   drawBarChart('chart-esc',   weeks, escalationsData, '#1C8EF9', CHART_CONTEXT.escalations);
   drawBarChart('chart-calls', weeks, callsData,        '#36C5B0', CHART_CONTEXT.calls);
   drawLineChart('chart-csat', weeks, csatData,         '#F59E0B', 5, CHART_CONTEXT.csat);
   drawBarChart('chart-docs',  weeks, docsData,         '#8B5CF6', CHART_CONTEXT.docs);
+
+  // Silent App charts
+  drawBarChart('chart-sa-stage',  stageLabels, stageCounts,  '#36C5B0', CHART_CONTEXT.saStage);
+  drawBarChart('chart-sa-new',    weeks,       saNewData,    '#1C8EF9', CHART_CONTEXT.saNew);
+  drawBarChart('chart-sa-stable', weeks,       saStableData, '#22c55e', CHART_CONTEXT.saStable);
+  drawLineChart('chart-sa-time',  weeks,       avgDaysData,  '#F59E0B', Math.max(...avgDaysData, 30), CHART_CONTEXT.saTime);
 }
 
 function showTooltip(canvas, x, y, week, value, context) {
   const tooltip = document.getElementById('chart-tooltip');
   if (!tooltip) return;
-
   const rect = canvas.getBoundingClientRect();
   const trendsRect = document.getElementById('trends-content').getBoundingClientRect();
-
   const absX = rect.left - trendsRect.left + x;
-  const absY = rect.top - trendsRect.top + y;
-
+  const absY = rect.top  - trendsRect.top  + y;
   tooltip.innerHTML = `
     <div class="tt-week">${week}</div>
     <div class="tt-value">${value}</div>
@@ -85,17 +209,14 @@ function showTooltip(canvas, x, y, week, value, context) {
     <div class="tt-dismiss">Click elsewhere to dismiss</div>
   `;
   tooltip.classList.remove('hidden');
-
   const tW = 240;
   const tH = tooltip.offsetHeight;
   let left = absX + 12;
-  let top = absY - tH / 2;
-
+  let top  = absY - tH / 2;
   if (left + tW > trendsRect.width - 10) left = absX - tW - 12;
   if (top < 0) top = 4;
-
   tooltip.style.left = left + 'px';
-  tooltip.style.top = top + 'px';
+  tooltip.style.top  = top  + 'px';
   _pinnedTooltip = { week, value };
 }
 
@@ -116,69 +237,56 @@ function drawBarChart(id, labels, data, colour, context) {
   const pad = { top: 10, right: 10, bottom: 30, left: 30 };
   const gap = (W - pad.left - pad.right) / labels.length;
   const barW = gap * 0.6;
-
   let selectedIdx = null;
 
   const draw = () => {
     ctx.clearRect(0, 0, W, H);
     ctx.fillStyle = '#0f1923';
     ctx.fillRect(0, 0, W, H);
-
     for (let i = 0; i <= 4; i++) {
       const y = pad.top + (H - pad.top - pad.bottom) * (1 - i / 4);
-      ctx.strokeStyle = '#1e2d3d';
-      ctx.lineWidth = 1;
+      ctx.strokeStyle = '#1e2d3d'; ctx.lineWidth = 1;
       ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(W - pad.right, y); ctx.stroke();
-      ctx.fillStyle = '#4a6278';
-      ctx.font = '10px monospace';
+      ctx.fillStyle = '#4a6278'; ctx.font = '10px monospace';
       ctx.fillText(Math.round(max * i / 4), 2, y + 4);
     }
-
     data.forEach((val, i) => {
-      const x = pad.left + i * gap + gap / 2 - barW / 2;
+      const x    = pad.left + i * gap + gap / 2 - barW / 2;
       const barH = Math.max(((H - pad.top - pad.bottom) * val) / max, val > 0 ? 2 : 0);
-      const y = H - pad.bottom - barH;
-      const isSelected = selectedIdx === i;
-      ctx.fillStyle = isSelected ? colour : colour + 'cc';
-      if (isSelected) { ctx.shadowColor = colour; ctx.shadowBlur = 8; }
+      const y    = H - pad.bottom - barH;
+      const isSel = selectedIdx === i;
+      ctx.fillStyle = isSel ? colour : colour + 'cc';
+      if (isSel) { ctx.shadowColor = colour; ctx.shadowBlur = 8; }
       ctx.fillRect(x, y, barW, barH);
       ctx.shadowBlur = 0;
-      ctx.fillStyle = isSelected ? '#fff' : '#7a9bb5';
-      ctx.font = isSelected ? 'bold 10px monospace' : '10px monospace';
-      ctx.fillText(labels[i], pad.left + i * gap + gap / 2 - 10, H - 8);
+      ctx.fillStyle = isSel ? '#fff' : '#7a9bb5';
+      ctx.font = isSel ? 'bold 10px monospace' : '10px monospace';
+      const lbl = labels[i];
+      const lblW = ctx.measureText(lbl).width;
+      ctx.fillText(lbl, pad.left + i * gap + gap / 2 - lblW / 2, H - 8);
     });
   };
-
   draw();
 
   canvas.style.cursor = 'pointer';
   canvas.addEventListener('click', (e) => {
     const rect = canvas.getBoundingClientRect();
     const mx = (e.clientX - rect.left) * (W / rect.width);
-    const my = (e.clientY - rect.top) * (H / rect.height);
-
+    const my = (e.clientY - rect.top)  * (H / rect.height);
     let clicked = null;
     data.forEach((val, i) => {
-      if (val === 0) return; // skip empty bars entirely
-      const x = pad.left + i * gap + gap / 2 - barW / 2;
+      if (val === 0) return;
+      const x    = pad.left + i * gap + gap / 2 - barW / 2;
       const barH = Math.max(((H - pad.top - pad.bottom) * val) / max, 2);
-      const y = H - pad.bottom - barH;
+      const y    = H - pad.bottom - barH;
       if (mx >= x && mx <= x + barW && my >= y && my <= H - pad.bottom) clicked = i;
     });
-
-    if (clicked !== null && selectedIdx === clicked) {
-      selectedIdx = null;
-      hideTooltip();
-    } else if (clicked !== null) {
+    if (clicked !== null && selectedIdx === clicked) { selectedIdx = null; hideTooltip(); }
+    else if (clicked !== null) {
       selectedIdx = clicked;
       const barH = Math.max(((H - pad.top - pad.bottom) * data[clicked]) / max, 2);
-      const tipY = H - pad.bottom - barH;
-      const tipX = pad.left + clicked * gap + gap / 2;
-      showTooltip(canvas, tipX, tipY, labels[clicked], data[clicked], context);
-    } else {
-      selectedIdx = null;
-      hideTooltip();
-    }
+      showTooltip(canvas, pad.left + clicked * gap + gap / 2, H - pad.bottom - barH, labels[clicked], data[clicked], context);
+    } else { selectedIdx = null; hideTooltip(); }
     draw();
   });
 }
@@ -192,76 +300,55 @@ function drawLineChart(id, labels, data, colour, maxVal, context) {
   canvas.width = W;
   const pad = { top: 10, right: 10, bottom: 30, left: 30 };
   const gap = (W - pad.left - pad.right) / (labels.length - 1 || 1);
-
   let selectedIdx = null;
-
   const pointX = (i) => pad.left + i * gap;
-  const pointY = (v) => pad.top + (H - pad.top - pad.bottom) * (1 - v / maxVal);
+  const pointY = (v) => pad.top + (H - pad.top - pad.bottom) * (1 - v / (maxVal || 1));
 
   const draw = () => {
     ctx.clearRect(0, 0, W, H);
     ctx.fillStyle = '#0f1923';
     ctx.fillRect(0, 0, W, H);
-
     for (let i = 0; i <= 5; i++) {
       const y = pad.top + (H - pad.top - pad.bottom) * (1 - i / 5);
-      ctx.strokeStyle = '#1e2d3d';
-      ctx.lineWidth = 1;
+      ctx.strokeStyle = '#1e2d3d'; ctx.lineWidth = 1;
       ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(W - pad.right, y); ctx.stroke();
-      ctx.fillStyle = '#4a6278';
-      ctx.font = '10px monospace';
-      ctx.fillText((maxVal * i / 5).toFixed(1), 2, y + 4);
+      ctx.fillStyle = '#4a6278'; ctx.font = '10px monospace';
+      ctx.fillText((maxVal * i / 5).toFixed(maxVal <= 10 ? 1 : 0), 2, y + 4);
     }
-
-    ctx.strokeStyle = colour;
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = colour; ctx.lineWidth = 2;
     ctx.beginPath();
-    data.forEach((val, i) => {
-      i === 0 ? ctx.moveTo(pointX(i), pointY(val)) : ctx.lineTo(pointX(i), pointY(val));
-    });
+    data.forEach((val, i) => i === 0 ? ctx.moveTo(pointX(i), pointY(val)) : ctx.lineTo(pointX(i), pointY(val)));
     ctx.stroke();
-
     data.forEach((val, i) => {
-      const isSelected = selectedIdx === i;
-      ctx.fillStyle = isSelected ? '#fff' : colour;
-      ctx.shadowColor = isSelected ? colour : 'transparent';
-      ctx.shadowBlur = isSelected ? 10 : 0;
-      ctx.beginPath();
-      ctx.arc(pointX(i), pointY(val), isSelected ? 5 : 3, 0, Math.PI * 2);
-      ctx.fill();
+      const isSel = selectedIdx === i;
+      ctx.fillStyle = isSel ? '#fff' : colour;
+      ctx.shadowColor = isSel ? colour : 'transparent'; ctx.shadowBlur = isSel ? 10 : 0;
+      ctx.beginPath(); ctx.arc(pointX(i), pointY(val), isSel ? 5 : 3, 0, Math.PI * 2); ctx.fill();
       ctx.shadowBlur = 0;
-      ctx.fillStyle = isSelected ? '#fff' : '#7a9bb5';
-      ctx.font = isSelected ? 'bold 10px monospace' : '10px monospace';
-      ctx.fillText(labels[i], pointX(i) - 10, H - 8);
+      ctx.fillStyle = isSel ? '#fff' : '#7a9bb5'; ctx.font = isSel ? 'bold 10px monospace' : '10px monospace';
+      const lbl = labels[i];
+      const lblW = ctx.measureText(lbl).width;
+      ctx.fillText(lbl, pointX(i) - lblW / 2, H - 8);
     });
   };
-
   draw();
 
   canvas.style.cursor = 'pointer';
   canvas.addEventListener('click', (e) => {
     const rect = canvas.getBoundingClientRect();
     const mx = (e.clientX - rect.left) * (W / rect.width);
-    const my = (e.clientY - rect.top) * (H / rect.height);
-
+    const my = (e.clientY - rect.top)  * (H / rect.height);
     let clicked = null;
     data.forEach((val, i) => {
-      const dx = mx - pointX(i);
-      const dy = my - pointY(val);
+      const dx = mx - pointX(i); const dy = my - pointY(val);
       if (Math.sqrt(dx * dx + dy * dy) < 16) clicked = i;
     });
-
-    if (clicked !== null && selectedIdx === clicked) {
-      selectedIdx = null;
-      hideTooltip();
-    } else if (clicked !== null) {
+    if (clicked !== null && selectedIdx === clicked) { selectedIdx = null; hideTooltip(); }
+    else if (clicked !== null) {
       selectedIdx = clicked;
       const val = data[clicked];
-      showTooltip(canvas, pointX(clicked), pointY(val), labels[clicked], val === 0 ? 'No data' : val.toFixed(1) + '/5', context);
-    } else {
-      selectedIdx = null;
-      hideTooltip();
-    }
+      showTooltip(canvas, pointX(clicked), pointY(val), labels[clicked], val === 0 ? 'No data' : (maxVal <= 10 ? val.toFixed(1) + '/5' : val + ' days'), context);
+    } else { selectedIdx = null; hideTooltip(); }
     draw();
   });
 }

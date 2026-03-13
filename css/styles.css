@@ -778,3 +778,17 @@ input[type="date"].input-field::-webkit-calendar-picker-indicator { filter: inve
   background: #8b691422;
   color: #e0b520;
 }
+
+/* ── Trends: section labels + SA RAG summary ────────────────────── */
+.trends-section-label { font-size:13px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; margin:24px 0 10px; }
+.sa-rag-summary { display:flex; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
+.rag-stat { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:10px 18px; display:flex; flex-direction:column; align-items:center; gap:2px; min-width:90px; }
+.rag-stat.green { border-color:var(--green)44; }
+.rag-stat.amber { border-color:var(--amber)44; }
+.rag-stat.red   { border-color:var(--red)44; }
+.rag-stat-num { font-size:1.6rem; font-weight:700; line-height:1; }
+.rag-stat.green .rag-stat-num { color:var(--green); }
+.rag-stat.amber .rag-stat-num { color:var(--amber); }
+.rag-stat.red   .rag-stat-num { color:var(--red); }
+.rag-stat.neutral .rag-stat-num { color:var(--text); }
+.rag-stat-lbl { font-size:11px; color:var(--muted); }

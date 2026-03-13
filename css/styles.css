@@ -792,3 +792,209 @@ input[type="date"].input-field::-webkit-calendar-picker-indicator { filter: inve
 .rag-stat.red   .rag-stat-num { color:var(--red); }
 .rag-stat.neutral .rag-stat-num { color:var(--text); }
 .rag-stat-lbl { font-size:11px; color:var(--muted); }
+
+
+/* ── Drill-down panels ─────────────────────────────────────────────────── */
+.drill-panel {
+  margin-top: 12px;
+  background: #111c27;
+  border: 1px solid #1e3a52;
+  border-radius: 8px;
+  overflow: hidden;
+  animation: drillSlideIn 0.18s ease;
+}
+@keyframes drillSlideIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.drill-panel.hidden { display: none; }
+
+.drill-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: #152130;
+  border-bottom: 1px solid #1e3a52;
+  gap: 8px;
+}
+.drill-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #c4d8e8;
+  flex: 1;
+}
+.drill-close {
+  background: transparent;
+  border: 1px solid #2a4a62;
+  color: #7a9bb5;
+  padding: 3px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+.drill-close:hover { background: #1e3a52; color: #c4d8e8; }
+
+.drill-empty {
+  padding: 16px 14px;
+  color: #4a6278;
+  font-size: 12px;
+  font-style: italic;
+}
+.drill-no-detail {
+  padding: 10px 14px;
+  color: #4a6278;
+  font-size: 11px;
+  font-style: italic;
+}
+
+.drill-table-wrap {
+  overflow-x: auto;
+  padding: 10px 14px;
+}
+.drill-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+.drill-table th {
+  text-align: left;
+  padding: 5px 8px;
+  color: #4a6278;
+  border-bottom: 1px solid #1e2d3d;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.drill-table td {
+  padding: 6px 8px;
+  color: #a8c0d0;
+  border-bottom: 1px solid #0f1923;
+  vertical-align: top;
+}
+.drill-table tr:last-child td { border-bottom: none; }
+.drill-notes { max-width: 200px; color: #7a9bb5; font-style: italic; }
+.drill-fast { color: var(--green); font-weight: 600; }
+.drill-slow { color: var(--red);   font-weight: 600; }
+
+.drill-detail-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 14px 8px;
+}
+.drill-stat-card {
+  background: #0f1923;
+  border: 1px solid #1e2d3d;
+  border-radius: 6px;
+  padding: 8px 12px;
+  min-width: 120px;
+}
+.drill-stat-val {
+  font-size: 14px;
+  font-weight: 700;
+  color: #c4d8e8;
+}
+.drill-stat-lbl {
+  font-size: 10px;
+  color: #4a6278;
+  margin-top: 2px;
+}
+
+.drill-note-block {
+  padding: 8px 14px 12px;
+  font-size: 11px;
+  color: #7a9bb5;
+  line-height: 1.5;
+}
+.drill-note-block strong { color: #a8c0d0; }
+
+.drill-score-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 14px 10px;
+}
+.drill-score-bar {
+  flex: 1;
+  height: 8px;
+  background: #1e2d3d;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.drill-score-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+.drill-score-label {
+  font-size: 11px;
+  color: #7a9bb5;
+  white-space: nowrap;
+}
+
+/* ── Impl cards in drill panels ─────────────────────────────────────────── */
+.drill-impl-list {
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.drill-impl-card {
+  background: #0f1923;
+  border: 1px solid #1e2d3d;
+  border-radius: 6px;
+  padding: 9px 12px;
+}
+.drill-impl-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 5px;
+}
+.drill-impl-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #c4d8e8;
+  flex: 1;
+}
+.drill-impl-meta {
+  font-size: 11px;
+  color: #7a9bb5;
+}
+.drill-days-badge {
+  background: #1e2d3d;
+  border-radius: 10px;
+  padding: 2px 8px;
+  font-size: 10px;
+  color: #a8c0d0;
+  white-space: nowrap;
+}
+.drill-impl-detail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  align-items: center;
+}
+.drill-checklist-badge {
+  background: #1e2d3d;
+  border-radius: 10px;
+  padding: 2px 8px;
+  font-size: 10px;
+  color: #36C5B0;
+}
+.drill-links {
+  display: flex;
+  gap: 6px;
+}
+.drill-link {
+  font-size: 10px;
+  color: #1C8EF9;
+  text-decoration: none;
+  padding: 1px 6px;
+  border: 1px solid #1e3a52;
+  border-radius: 4px;
+}
+.drill-link:hover { background: #1e3a52; }

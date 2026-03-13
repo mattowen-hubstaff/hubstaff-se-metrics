@@ -354,7 +354,9 @@ function renderImplDetail(impl, allImpls) {
           '</div>' +
           '<div class="activity-note">' + entry.note + '</div>' +
           '<div class="activity-links">' +
-            (entry.url ? '<a href="' + entry.url + '" target="_blank" class="activity-link">🔗 Link</a>' : '') +
+            (entry.urls && entry.urls.length ? entry.urls.map(function(u, i) {
+              return '<a href="' + u + '" target="_blank" class="activity-link">🔗 Link ' + (entry.urls.length > 1 ? (i+1) : '') + '</a>';
+            }).join('') : (entry.url ? '<a href="' + entry.url + '" target="_blank" class="activity-link">🔗 Link</a>' : '')) +
           '</div>' +
         '</div>';
       }).join('');
@@ -411,7 +413,8 @@ function renderImplDetail(impl, allImpls) {
               '<option value="Red">Red</option>' +
             '</select>' +
             '<textarea id="act-note" placeholder="What happened? What\'s next?" class="input-field" rows="3"></textarea>' +
-            '<input id="act-url" placeholder="URL (optional — Slack, HubSpot, doc, etc.)" class="input-field input-sm" />' +
+            '<div id="act-urls-container"></div>' +
+            '<button type="button" class="btn-secondary btn-sm" style="width:100%;margin-bottom:4px" onclick="addUrlField()">+ Add URL</button>' +
             '<button class="btn-primary btn-sm" style="width:100%" onclick="addActivityEntry(\'' + impl.id + '\')">Add Entry</button>' +
           '</div>' +
           '<div class="activity-timeline">' + timelineHtml + '</div>' +
@@ -440,6 +443,18 @@ async function toggleChecklistItem(implId, itemId, checked) {
 
 // ── Activity log ──────────────────────────────────────────────────────────────
 
+function addUrlField() {
+  var container = document.getElementById('act-urls-container');
+  if (!container) return;
+  var idx = container.children.length;
+  var row = document.createElement('div');
+  row.className = 'url-row';
+  row.innerHTML =
+    '<input class="input-field input-sm act-url-input" placeholder="URL ' + (idx + 1) + ' (Slack, HubSpot, doc…)" />' +
+    '<button type="button" class="url-remove-btn" onclick="this.parentElement.remove()" title="Remove">✕</button>';
+  container.appendChild(row);
+}
+
 async function addActivityEntry(implId) {
   var impl = window._implementations.find(function(i){ return i.id === implId; });
   if (!impl) return;
@@ -447,13 +462,13 @@ async function addActivityEntry(implId) {
   var stage       = document.getElementById('act-stage').value;
   var rag         = document.getElementById('act-rag').value;
   var note        = document.getElementById('act-note').value.trim();
-  var url = document.getElementById('act-url').value.trim();
+  var urls = Array.from(document.querySelectorAll('.act-url-input')).map(function(i){ return i.value.trim(); }).filter(Boolean);
 
   if (!note) { showToast('Please add a note', 'error'); return; }
 
   var entry = { stage: stage, date: new Date().toISOString().slice(0,10), note: note };
   if (rag)         entry.rag         = rag;
-  if (url) entry.url = url;
+  if (urls.length) entry.urls = urls;
 
   var activity = (Array.isArray(impl.activity) ? impl.activity : []).concat([entry]);
   var update   = { activity: activity };

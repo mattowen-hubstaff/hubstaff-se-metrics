@@ -736,3 +736,31 @@ input[type="date"].input-field::-webkit-calendar-picker-indicator { filter: inve
   transition: border-color 0.15s, background 0.15s;
 }
 .detail-back:hover { border-color: var(--blue); background: var(--blue)11; }
+
+/* ── Multi-URL rows (activity log) ─────────────────────────────── */
+.url-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 4px;
+}
+.url-row .act-url-input {
+  flex: 1;
+  margin-bottom: 0;
+}
+.url-remove-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 11px;
+  padding: 4px 7px;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: color 0.15s, border-color 0.15s;
+}
+.url-remove-btn:hover {
+  color: #e05c5c;
+  border-color: #e05c5c;
+}

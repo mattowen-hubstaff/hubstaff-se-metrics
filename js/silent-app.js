@@ -432,7 +432,21 @@ function renderImplDetail(impl, allImpls) {
         '</div>' +
       '</div>' +
     '</div>' +
-    renderImplModal(impl);
+    renderImplModal(impl) +
+    '<div id="unarchive-modal" class="modal hidden">' +
+      '<div class="modal-box">' +
+        '<h3>Restore Implementation</h3>' +
+        '<p style="margin:0 0 12px;color:var(--muted);font-size:13px">Where should this implementation be restored to, and why?</p>' +
+        '<select id="unarchive-stage" class="input-field" style="margin-bottom:10px">' +
+          STAGES.map(function(s){ return \'<option value="\' + s + \'">\' + s + \'</option>\'; }).join(\'\') +
+        \'</select>\' +
+        \'<textarea id="unarchive-note" placeholder="Reason for restoring (required)" class="input-field" rows="3" style="margin-bottom:12px"></textarea>\' +
+        \'<div class="modal-actions">\' +
+          \'<button class="btn-secondary" onclick="closeUnarchiveModal()">Cancel</button>\' +
+          \'<button class="btn-primary" onclick="confirmUnarchive()">Restore</button>\' +
+        \'</div>\' +
+      \'</div>\' +
+    \'</div>\';
 }
 
 // ── Checklist toggle ──────────────────────────────────────────────────────────
@@ -524,14 +538,47 @@ async function archiveImpl(id) {
   }
 }
 
-async function unarchiveImpl(id) {
+function unarchiveImpl(id) {
+  window._unarchiveTargetId = id;
+  var modal = document.getElementById('unarchive-modal');
+  if (modal) {
+    document.getElementById('unarchive-note').value = '';
+    document.getElementById('unarchive-stage').value = 'Stability';
+    modal.classList.remove('hidden');
+  }
+}
+
+function closeUnarchiveModal() {
+  var modal = document.getElementById('unarchive-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+async function confirmUnarchive() {
+  var id    = window._unarchiveTargetId;
+  var stage = document.getElementById('unarchive-stage').value;
+  var note  = document.getElementById('unarchive-note').value.trim();
+  if (!note) { showToast('Please add a reason for restoring', 'error'); return; }
+  closeUnarchiveModal();
   showToast('Restoring...', 'info');
   try {
-    await updateImplementation(id, { stage: 'Stability' });
+    var impl = window._implementations.find(function(i){ return i.id === id; });
+    var entry = {
+      stage: stage,
+      date: new Date().toISOString().slice(0,10),
+      note: 'Restored from archive: ' + note
+    };
+    var activity = (Array.isArray(impl.activity) ? impl.activity : []).concat([entry]);
+    var stageEnteredAt = Object.assign({}, impl.stage_entered_at || {});
+    stageEnteredAt[stage] = entry.date;
+    await updateImplementation(id, {
+      stage: stage,
+      activity: activity,
+      stage_entered_at: stageEnteredAt
+    });
     await reloadAll();
     var updated = window._implementations.find(function(i){ return i.id === id; });
     if (updated) renderImplDetail(updated, window._implementations);
-    showToast('Implementation restored to Stability', 'success');
+    showToast('Restored to ' + stage, 'success');
   } catch(e) {
     showToast('Restore failed', 'error');
   }

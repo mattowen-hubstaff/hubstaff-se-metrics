@@ -40,6 +40,7 @@ const DEFAULT_CHECKLISTS = {
 
 let _viewMode = 'kanban';
 let _viewingImpl = null;
+let _showArchived = false;
 
 // ── Main render ───────────────────────────────────────────────────────────────
 
@@ -50,12 +51,15 @@ function renderSilentApp(implementations) {
     _viewingImpl = null;
   }
 
-  const total   = implementations.length;
-  const byStage = {};
-  STAGES.forEach(s => byStage[s] = implementations.filter(i => i.stage === s));
-  const stable = byStage['Stability'] ? byStage['Stability'].length : 0;
-  const atRisk = implementations.filter(i => i.rag === 'Red').length;
-  const amber  = implementations.filter(i => i.rag === 'Amber').length;
+  const archived = implementations.filter(i => i.stage === 'Archived');
+  const active   = implementations.filter(i => i.stage !== 'Archived');
+  const display  = _showArchived ? archived : active;
+  const total    = active.length;
+  const byStage  = {};
+  STAGES.forEach(s => byStage[s] = active.filter(i => i.stage === s));
+  const stable   = byStage['Stability'] ? byStage['Stability'].length : 0;
+  const atRisk   = active.filter(i => i.rag === 'Red').length;
+  const amber    = active.filter(i => i.rag === 'Amber').length;
 
   document.getElementById('silent-app-content').innerHTML =
     '<div class="sa-header">' +
@@ -67,15 +71,20 @@ function renderSilentApp(implementations) {
       '</div>' +
       '<div class="sa-toolbar">' +
         '<div class="view-toggle">' +
-          '<button class="view-btn ' + (_viewMode==='kanban'?'active':'') + '" onclick="setViewMode(\'kanban\')">&#9646; Kanban</button>' +
-          '<button class="view-btn ' + (_viewMode==='table' ?'active':'') + '" onclick="setViewMode(\'table\')">&#9776; Table</button>' +
+          '<button class="view-btn ' + (!_showArchived && _viewMode==='kanban'?'active':'') + '" onclick="setShowArchived(false);setViewMode(\'kanban\')">&#9646; Kanban</button>' +
+          '<button class="view-btn ' + (!_showArchived && _viewMode==='table' ?'active':'') + '" onclick="setShowArchived(false);setViewMode(\'table\')">&#9776; Table</button>' +
+          '<button class="view-btn ' + (_showArchived?'active':'') + '" onclick="setShowArchived(true)">🗄 Archived (' + archived.length + ')</button>' +
         '</div>' +
-        '<button class="btn-primary" onclick="showAddImplModal()">+ Add Implementation</button>' +
+        (!_showArchived ? '<button class="btn-primary" onclick="showAddImplModal()">+ Add Implementation</button>' : '') +
       '</div>' +
     '</div>' +
-    (total === 0
-      ? '<div class="empty-state">No implementations tracked yet. Add your first one above.</div>'
-      : _viewMode === 'kanban' ? renderKanban(byStage) : renderTable(implementations)) +
+    (_showArchived
+      ? (archived.length === 0
+          ? '<div class="empty-state">No archived implementations.</div>'
+          : renderTable(archived))
+      : (active.length === 0
+          ? '<div class="empty-state">No implementations tracked yet. Add your first one above.</div>'
+          : _viewMode === 'kanban' ? renderKanban(byStage) : renderTable(active))) +
     renderImplModal(null);
 }
 
@@ -388,6 +397,8 @@ function renderImplDetail(impl, allImpls) {
               '<span class="rag-badge-lg" style="background:' + ragColour + '22;color:' + ragColour + ';border:1px solid ' + ragColour + '66">' + ragEmoji + ' ' + impl.rag + '</span>' +
               (impl.csat ? '<span class="csat-badge">CSAT ' + impl.csat + '/10</span>' : '') +
               '<button class="btn-secondary btn-sm" onclick="editImpl(\'' + impl.id + '\')">Edit</button>' +
+              (impl.stage === 'Stability' ? '<button class="btn-archive btn-sm" onclick="archiveImpl(\'' + impl.id + '\')">🗄 Archive</button>' : '') +
+              (impl.stage === 'Archived'  ? '<button class="btn-secondary btn-sm" onclick="unarchiveImpl(\'' + impl.id + '\')">↩ Unarchive</button>' : '') +
             '</div>' +
           '</div>' +
           pipelineHtml +
@@ -494,6 +505,37 @@ async function addActivityEntry(implId) {
 }
 
 // ── View mode ─────────────────────────────────────────────────────────────────
+
+function setShowArchived(val) {
+  _showArchived = val;
+  renderSilentApp(window._implementations);
+}
+
+async function archiveImpl(id) {
+  if (!confirm('Archive this implementation? It will be hidden from the main view but can be restored.')) return;
+  showToast('Archiving...', 'info');
+  try {
+    await updateImplementation(id, { stage: 'Archived' });
+    _viewingImpl = null;
+    await reloadAll();
+    showToast('Implementation archived', 'success');
+  } catch(e) {
+    showToast('Archive failed', 'error');
+  }
+}
+
+async function unarchiveImpl(id) {
+  showToast('Restoring...', 'info');
+  try {
+    await updateImplementation(id, { stage: 'Stability' });
+    await reloadAll();
+    var updated = window._implementations.find(function(i){ return i.id === id; });
+    if (updated) renderImplDetail(updated, window._implementations);
+    showToast('Implementation restored to Stability', 'success');
+  } catch(e) {
+    showToast('Restore failed', 'error');
+  }
+}
 
 function setViewMode(mode) {
   _viewMode = mode;

@@ -764,3 +764,19 @@ input[type="date"].input-field::-webkit-calendar-picker-indicator { filter: inve
   color: #e05c5c;
   border-color: #e05c5c;
 }
+
+/* ── Archive button ─────────────────────────────────────────────── */
+.btn-archive {
+  background: transparent;
+  border: 1px solid #8b6914;
+  color: #c49a1a;
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.btn-archive:hover {
+  background: #8b691422;
+  color: #e0b520;
+}

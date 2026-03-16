@@ -5,17 +5,23 @@ let currentTab = 'overview';
 window._weeklyMetrics = [];
 window._implementations = [];
 window._escalations = [];
+window._calls = [];
+window._docs = [];
 
 async function reloadAll() {
   try {
-    const [wm, impl, esc] = await Promise.all([
+    const [wm, impl, esc, calls, docs] = await Promise.all([
       getWeeklyMetrics(),
       getImplementations(),
-      getEscalations()
+      getEscalations(),
+      getCalls(),
+      getDocs()
     ]);
     window._weeklyMetrics = wm || [];
     window._implementations = impl || [];
     window._escalations = esc || [];
+    window._calls = calls || [];
+    window._docs = docs || [];
     renderTab(currentTab);
   } catch (e) {
     showToast('Failed to load data from Supabase', 'error');
@@ -37,6 +43,8 @@ function renderTab(tab) {
     case 'escalations': renderEscalations(window._escalations); break;
     case 'insights':    renderInsights(window._escalations); break;
     case 'trends':     renderTrends(window._weeklyMetrics, window._implementations); break;
+    case 'calls':      renderCalls(window._calls); break;
+    case 'docs':       renderDocs(window._docs); break;
     case 'week-log':   renderWeekLog(window._weeklyMetrics); populateWeekForm(); break;
   }
 }

@@ -1153,3 +1153,152 @@ input[type="date"].input-field::-webkit-calendar-picker-indicator { filter: inve
   border-radius: 4px;
 }
 .drill-link:hover { background: #1e3a52; }
+
+/* ── Calls / Docs tab styles ─────────────────────────────────────────────── */
+
+.tab-kpi-bar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.kpi-val {
+  font-family: var(--font-mono);
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--blue);
+}
+
+.btn-danger-sm {
+  font-size: 11px;
+  padding: 4px 10px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.btn-danger-sm:hover {
+  background: rgba(239,68,68,0.1);
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.table-link {
+  color: var(--blue);
+  text-decoration: none;
+  font-size: 0.82rem;
+}
+.table-link:hover { text-decoration: underline; }
+
+.detail-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.form-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 18px;
+}
+
+.required { color: var(--red); margin-left: 2px; }
+
+.tag-blue {
+  background: rgba(28,142,249,0.12);
+  color: var(--blue);
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-family: var(--font-mono);
+}
+
+/* ── Week log — month accordion ──────────────────────────────────────────── */
+
+.wl-month-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.wl-month-group {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.wl-month-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 11px 16px;
+  background: var(--surface);
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text);
+  transition: background 0.15s;
+  user-select: none;
+}
+.wl-month-header:hover { background: var(--surface2); }
+.wl-month-header.open  { background: var(--surface2); }
+
+.wl-month-chevron {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.wl-month-body { overflow: hidden; }
+.wl-month-body.hidden { display: none; }
+.wl-month-body .data-table { border-radius: 0; border: none; border-top: 1px solid var(--border); }
+
+/* ── Week log — auto-stats strip ─────────────────────────────────────────── */
+
+.wl-auto-stats {
+  display: flex;
+  gap: 24px;
+  margin-top: 12px;
+  padding: 12px 16px;
+  background: var(--surface2);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.wl-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.wl-stat-val {
+  font-family: var(--font-mono);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--blue);
+}
+
+.wl-stat-label {
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ── Week log — selected row ─────────────────────────────────────────────── */
+
+.wl-selected-row td {
+  background: rgba(28,142,249,0.07) !important;
+  border-left: 2px solid var(--blue);
+}
+
+.wl-edit-hint {
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+}

@@ -54,9 +54,9 @@ function renderWeekLog(weeklyMetrics) {
   const currentWeek = weeks.find(w => todayStr >= w.week_start && todayStr <= w.week_end) || weeks[0];
   if (!_wlSelectedWeekStart) _wlSelectedWeekStart = currentWeek.week_start;
 
-  // Auto-open the month of the selected week
+  // Auto-open the month of the selected week — only on first load
   const selWeek = weeks.find(w => w.week_start === _wlSelectedWeekStart) || currentWeek;
-  _wlOpenMonths.add(selWeek.month);
+  if (_wlOpenMonths.size === 0) _wlOpenMonths.add(selWeek.month);
 
   // Merge saved time data keyed by week_start
   const savedByStart = {};
